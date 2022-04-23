@@ -6,7 +6,7 @@ from asyncio import sleep
 TOKEN = open("TMI.txt", "r").read()
 CHANNELS = open("CHANNELS.txt", "r").read().split(",")
 AUTHORIZED = open("AUTHORIZED.txt", "r").read().split(",")
-
+CONSOLE_MSG_STATUS = [1]
 
 class Bot(commands.Bot):
 
@@ -22,24 +22,34 @@ class Bot(commands.Bot):
         #Variables
         split_msg = message.content.lower().split(" ")
         elm = self.get_channel("ElmiilloR")
-        
+        console_msg_status = CONSOLE_MSG_STATUS
+
         #Console msg
         if message.echo:
             return
-        print("<{}> {} : {}".format(message.channel.name, message.author.name, message.content))
+        if console_msg_status[0] == 0:
+            print("<{}> {} : {}".format(message.channel.name, message.author.name, message.content))
         await self.handle_commands(message)
 
+        if message.author.name == "srguillermo" and message.channel.name == "srguillermo" and "$con" in split_msg:
+            if console_msg_status[0] == 1:
+                console_msg_status[0] = 0
+            elif console_msg_status[0] == 0:
+                console_msg_status[0] = 1
 
     @commands.command()
     async def namess(self, ctx: commands.Context):
         split_msg = ctx.message.content.split(" ")
-        elm = self.get_channel("ElmiilloR")
         if ctx.author.name in AUTHORIZED:
-            username = split_msg[-2]
-            duration = split_msg[-1]
+            username = split_msg[1]
+            duration = split_msg[2]
             if int(duration) > 300:
                 duration = 300
-            await elm.send(f"/timeout {username} {duration}")
+            try:
+                channel = self.get_channel(split_msg[3])
+                await channel.send(f"/timeout {username} {duration}")
+            except IndexError:
+                await ctx.send(f"/timeout {username} {duration}")
         else: pass
 
 
@@ -49,7 +59,12 @@ class Bot(commands.Bot):
         if ctx.author.name == "srguillermo":
             for i in range(int(split_msg[-1])):
                 await ctx.send("https://linktr.ee/elmillor Bedge Zzz ")
-                await sleep(0.1)        
+                await sleep(0.1)
+
+                
+    @commands.command(aliases=[])
+    async def con(self, ctx: commands.Context):
+        print()        
 
 
 if __name__ == "__main__":
