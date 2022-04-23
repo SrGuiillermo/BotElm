@@ -1,12 +1,17 @@
+from http.client import ImproperConnectionState
 from twitchio.ext import commands
 import random
 from asyncio import sleep
+import requests
 
 
 TOKEN = open("TMI.txt", "r").read()
 CHANNELS = open("CHANNELS.txt", "r").read().split(",")
 AUTHORIZED = open("AUTHORIZED.txt", "r").read().split(",")
 CONSOLE_MSG_STATUS = [1]
+COPY_COM_STATUS = [1]
+COPY_COM_TARGET = []
+CHATTERS = requests.get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"]
 
 class Bot(commands.Bot):
 
@@ -17,25 +22,40 @@ class Bot(commands.Bot):
             prefix = "$",
             initial_channels = CHANNELS
             )
+        print("BOT READY")
 
     async def event_message(self, message):
+
         #Variables
         split_msg = message.content.lower().split(" ")
         elm = self.get_channel("ElmiilloR")
         console_msg_status = CONSOLE_MSG_STATUS
+        copy_com_status = COPY_COM_STATUS
+        copy_com_target = COPY_COM_TARGET
+        chatters = CHATTERS
 
         #Console msg
         if message.echo:
             return
         if console_msg_status[0] == 0:
-            print("<{}> {} : {}".format(message.channel.name, message.author.name, message.content))
+            print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
-
-        if message.author.name == "srguillermo" and message.channel.name == "srguillermo" and "$con" in split_msg:
+        #Console msg switch
+        if message.author.name == "srguillermo" and "$con" in split_msg:
             if console_msg_status[0] == 1:
                 console_msg_status[0] = 0
             elif console_msg_status[0] == 0:
                 console_msg_status[0] = 1
+
+
+        #Copy Command
+        if message.author.name == "srguillermo" and ("$copystop" or "$cs" in split_msg):
+            copy_com_status[0] = 1
+        if message.author.name == "srguillermo" and "$copy" in split_msg:
+            copy_com_status[0] = 0
+            copy_com_target[0] = split_msg[-1]
+        if copy_com_status[0] == 0 and message.author.name == copy_com_target[-1] and message.channel.name == "elmiillor":
+            await message.channel.send(f"FeelsSpecialMan : {message.content} ")
 
 
     #Namess
@@ -69,6 +89,7 @@ class Bot(commands.Bot):
         else: pass
 
 
+    #Linktree spam command
     @commands.command(aliases=["lt"])
     async def linktree(self, ctx: commands.Context):
         split_msg = ctx.message.content.split(" ")
@@ -77,8 +98,9 @@ class Bot(commands.Bot):
                 await ctx.send("https://linktr.ee/elmillor Bedge Zzz ")
                 await sleep(0.1)
 
-                
-    @commands.command(aliases=[])
+
+    #Exceptions            
+    @commands.command(aliases=["copystop", "cs", "copy"])
     async def con(self, ctx: commands.Context):
         print()        
 

@@ -1,3 +1,3 @@
-split_m = [1, 2, 3]
-if split_m[3]:
-    print("a")
+import requests
+
+cht = requests.get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"]
