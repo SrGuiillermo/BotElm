@@ -37,6 +37,8 @@ class Bot(commands.Bot):
             elif console_msg_status[0] == 0:
                 console_msg_status[0] = 1
 
+
+    #Namess
     @commands.command()
     async def namess(self, ctx: commands.Context):
         split_msg = ctx.message.content.split(" ")
@@ -50,6 +52,20 @@ class Bot(commands.Bot):
                 await channel.send(f"/timeout {username} {duration}")
             except IndexError:
                 await ctx.send(f"/timeout {username} {duration}")
+        else: pass
+
+    
+    #Nunban
+    @commands.command()
+    async def nunban(self, ctx: commands.Context):
+        split_msg = ctx.message.content.split(" ")
+        if ctx.author.name in AUTHORIZED:
+            username = split_msg[1]
+            try:
+                channel = self.get_channel(split_msg[2])
+                await channel.send(f"/unban {username}")
+            except IndexError:
+                await ctx.send(f"/unban {username}")
         else: pass
 
 
