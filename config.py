@@ -1,0 +1,5 @@
+config = {
+    "tmi" : "",
+    "channels" : [],
+    "authorized" : [],
+}
