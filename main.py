@@ -12,8 +12,14 @@ COPY_COM_STATUS = [1]
 COPY_COM_TARGET = [0]
 CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
 CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-WORD_LIST = open("word_list.txt", "r").read().split(",")
 WORD_LIST_STATUS = [1]
+try:
+    WORD_LIST = open("word_list.txt", "r").read().split(",")
+except FileNotFoundError:
+    temp = ["3600"]
+    with open("word_list.txt", "w") as f:
+        f.writelines(temp)
+    WORD_LIST = temp
 
 class Bot(commands.Bot):
 
