@@ -29,7 +29,6 @@ class Bot(commands.Bot):
 
         #Variables
         split_msg = message.content.lower().split(" ")
-        elm = self.get_channel("ElmiilloR")
         console_msg_status = CONSOLE_MSG_STATUS
         copy_com_status = COPY_COM_STATUS
         copy_com_target = COPY_COM_TARGET
@@ -53,9 +52,11 @@ class Bot(commands.Bot):
         #Copy Command
         if message.author.name == "srguillermo" and ("$copystop" or "$cs" in split_msg):
             copy_com_status[0] = 1
+            print("Copy command stopped")
         if message.author.name == "srguillermo" and "$copy" in split_msg:
             copy_com_status[0] = 0
             copy_com_target[0] = split_msg[-1]
+            print(f"Now copying {copy_com_target[0]}'s messages")
         if copy_com_status[0] == 0 and message.author.name == copy_com_target[-1]:
             await message.channel.send(f"FeelsSpecialMan : {message.content}")
 
@@ -63,6 +64,7 @@ class Bot(commands.Bot):
         if message.author.name == "srguillermo" and "$act" in split_msg:
             chatters = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
             chatters.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
+            print("Active chatters updated")
     
     
     #Namess
@@ -77,8 +79,10 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[3])
                 await channel.send(f"/timeout {username} {duration}")
+                print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{channel}>)")
             except IndexError:
                 await ctx.send(f"/timeout {username} {duration}")
+                print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
         else: pass
 
     
@@ -91,8 +95,10 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[2])
                 await channel.send(f"/unban {username}")
+                print(f"Nunban command used by {ctx.author.name} : {username} (<{channel}>)")
             except IndexError:
                 await ctx.send(f"/unban {username}")
+                print(f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
         else: pass
 
 
