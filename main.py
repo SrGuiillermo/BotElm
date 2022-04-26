@@ -24,7 +24,6 @@ except FileNotFoundError:
 
 class Bot(commands.Bot):
 
-
     def __init__(self):
         super().__init__(
             token = TOKEN,
