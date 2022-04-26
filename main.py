@@ -2,17 +2,18 @@ from twitchio.ext import commands
 from random import randint
 from asyncio import sleep
 from requests import get
+from config import config
 
-
-TOKEN = open("TMI.txt", "r").read()
-CHANNELS = open("CHANNELS.txt", "r").read().split(",")
-AUTHORIZED = open("AUTHORIZED.txt", "r").read().split(",")
+TOKEN = config["tmi"]
+CHANNELS = config["channels"]
+AUTHORIZED = config["authorized"]
 CONSOLE_MSG_STATUS = [1]
 COPY_COM_STATUS = [1]
-COPY_COM_TARGET = []
+COPY_COM_TARGET = [0]
 CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
 CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-
+WORD_LIST = open("word_list.txt", "r").read().split(",")
+WORD_LIST_STATUS = [1]
 
 class Bot(commands.Bot):
 
@@ -33,6 +34,8 @@ class Bot(commands.Bot):
         copy_com_status = COPY_COM_STATUS
         copy_com_target = COPY_COM_TARGET
         chatters = CHATTERS
+        word_list = WORD_LIST
+        word_list_status = WORD_LIST_STATUS
 
         #Console msg
         if message.echo:
@@ -47,10 +50,62 @@ class Bot(commands.Bot):
                 console_msg_status[0] = 0
             elif console_msg_status[0] == 0:
                 console_msg_status[0] = 1
+        
+        #Word list switch
+        if message.author.name == "srguillermo" and "$ws" in split_msg:
+            if word_list_status[0] == 1:
+                word_list_status[0] = 0
+                print("Word command online")
+            elif word_list_status[0] == 0:
+                word_list_status[0] = 1
+                print("Word command offline")
+        
+        #Word
+        if message.author.name == "srguillermo" and "$word" in split_msg:
+
+            if split_msg[1] == "time":
+                word_list[0] = split_msg[-1]
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(word_list))
+                print(f"Time in word command changed to {split_msg[-1]}")
+
+            if split_msg[1] == "add":
+                for i in range(2, len(split_msg)):
+                    if split_msg[i] not in word_list:
+                        word_list.append(split_msg[i])
+                        print(f"{split_msg[i]} added to word list")
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(word_list))
+            
+            if split_msg[1] == "remove":
+                for i in range(2, len(split_msg)):
+                    if split_msg[i] in word_list:
+                        for a in range(len(word_list)):
+                            if split_msg[i] == word_list[a]:
+                                del word_list [a]
+                                print(f"{word_list[a]} removed from word list")
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(word_list))
+            
+            if split_msg[1] == "clean":
+                for i in range(1, len(word_list)):
+                    del word_list[i]
+                    print(f"Word list cleaned")
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(word_list))
+        
+        if word_list_status[0] == 0:
+            incl = False
+            for i in range(1, len(word_list)):
+                if word_list[i] in split_msg:
+                    incl = True
+            if incl == True:
+                await message.channel.send(f"/timeout {message.author.name} {word_list[0]}")
+            incl = False
 
 
         #Copy Command
-        if message.author.name == "srguillermo" and ("$copystop" or "$cs" in split_msg):
+        if message.author.name == "srguillermo" and "$cs" in split_msg:
             copy_com_status[0] = 1
             print("Copy command stopped")
         if message.author.name == "srguillermo" and "$copy" in split_msg:
@@ -79,7 +134,7 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[3])
                 await channel.send(f"/timeout {username} {duration}")
-                print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{channel}>)")
+                print(f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
             except IndexError:
                 await ctx.send(f"/timeout {username} {duration}")
                 print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
@@ -95,7 +150,7 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[2])
                 await channel.send(f"/unban {username}")
-                print(f"Nunban command used by {ctx.author.name} : {username} (<{channel}>)")
+                print(f"Nunban command used by {ctx.author.name} : {username} ({channel})")
             except IndexError:
                 await ctx.send(f"/unban {username}")
                 print(f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
@@ -127,11 +182,16 @@ class Bot(commands.Bot):
                 await self.get_channel("ElmiilloR").send("La web PeepoGlad 👉 https://soloqchallenge.gg ")
                 await sleep(0.1)
     
+    #Help
+    @commands.command()
+    async def help(self, ctx: commands.Context):
+        if ctx.author.name in AUTHORIZED:
+            print("")
     
     #Exceptions            
-    @commands.command(aliases=["copystop", "cs", "copy", "act"])
+    @commands.command(aliases=["copystop", "cs", "copy", "act", "ws", "word"])
     async def con(self, ctx: commands.Context):
-        print()        
+        pass      
 
 
 if __name__ == "__main__":
