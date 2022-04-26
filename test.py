@@ -1,3 +1,7 @@
-import requests
+from random import randint
+from requests import get
 
-cht = requests.get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"]
+CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
+CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
+
+print(CHATTERS)

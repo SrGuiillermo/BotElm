@@ -1,8 +1,7 @@
-from http.client import ImproperConnectionState
 from twitchio.ext import commands
-import random
+from random import randint
 from asyncio import sleep
-import requests
+from requests import get
 
 
 TOKEN = open("TMI.txt", "r").read()
@@ -11,7 +10,9 @@ AUTHORIZED = open("AUTHORIZED.txt", "r").read().split(",")
 CONSOLE_MSG_STATUS = [1]
 COPY_COM_STATUS = [1]
 COPY_COM_TARGET = []
-CHATTERS = requests.get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"]
+CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
+CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
+
 
 class Bot(commands.Bot):
 
@@ -40,6 +41,7 @@ class Bot(commands.Bot):
         if console_msg_status[0] == 0:
             print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
+        
         #Console msg switch
         if message.author.name == "srguillermo" and "$con" in split_msg:
             if console_msg_status[0] == 1:
@@ -54,10 +56,15 @@ class Bot(commands.Bot):
         if message.author.name == "srguillermo" and "$copy" in split_msg:
             copy_com_status[0] = 0
             copy_com_target[0] = split_msg[-1]
-        if copy_com_status[0] == 0 and message.author.name == copy_com_target[-1] and message.channel.name == "elmiillor":
-            await message.channel.send(f"FeelsSpecialMan : {message.content} ")
+        if copy_com_status[0] == 0 and message.author.name == copy_com_target[-1]:
+            await message.channel.send(f"FeelsSpecialMan : {message.content}")
 
-
+        #Act viewers list
+        if message.author.name == "srguillermo" and "$act" in split_msg:
+            chatters = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
+            chatters.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
+    
+    
     #Namess
     @commands.command()
     async def namess(self, ctx: commands.Context):
@@ -95,12 +102,28 @@ class Bot(commands.Bot):
         split_msg = ctx.message.content.split(" ")
         if ctx.author.name == "srguillermo":
             for i in range(int(split_msg[-1])):
-                await ctx.send("https://linktr.ee/elmillor Bedge Zzz ")
+                await self.get_channel("ElmiilloR").send("https://linktr.ee/elmillor Bedge Zzz ")
                 await sleep(0.1)
 
-
+    #Random
+    @commands.command(aliases=["gr", "printrandom"])
+    async def getrandom(self, ctx: commands.Context):
+        chatters = CHATTERS
+        await ctx.send(chatters[randint(0, len(chatters))])
+    
+    
+    #SoloQChallenge
+    @commands.command(aliases=["sqc"])
+    async def soloq(self, ctx: commands.Context):
+        split_msg = ctx.message.content.split(" ")
+        if ctx.author.name == "srguillermo":
+            for i in range(int(split_msg[-1])):
+                await self.get_channel("ElmiilloR").send("La web PeepoGlad 👉 https://soloqchallenge.gg ")
+                await sleep(0.1)
+    
+    
     #Exceptions            
-    @commands.command(aliases=["copystop", "cs", "copy"])
+    @commands.command(aliases=["copystop", "cs", "copy", "act"])
     async def con(self, ctx: commands.Context):
         print()        
 
