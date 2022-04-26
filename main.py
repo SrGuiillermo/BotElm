@@ -7,6 +7,7 @@ from config import config
 TOKEN = config["tmi"]
 CHANNELS = config["channels"]
 AUTHORIZED = config["authorized"]
+PROPIETARY = config["propietary"]
 CONSOLE_MSG_STATUS = [1]
 COPY_COM_STATUS = [1]
 COPY_COM_TARGET = [0]
@@ -36,6 +37,7 @@ class Bot(commands.Bot):
 
         #Variables
         split_msg = message.content.lower().split(" ")
+        propietary = PROPIETARY
         console_msg_status = CONSOLE_MSG_STATUS
         copy_com_status = COPY_COM_STATUS
         copy_com_target = COPY_COM_TARGET
@@ -51,14 +53,14 @@ class Bot(commands.Bot):
         await self.handle_commands(message)
         
         #Console msg switch
-        if message.author.name == "srguillermo" and "$con" in split_msg:
+        if message.author.name in propietary and "$con" in split_msg:
             if console_msg_status[0] == 1:
                 console_msg_status[0] = 0
             elif console_msg_status[0] == 0:
                 console_msg_status[0] = 1
         
         #Word list switch
-        if message.author.name == "srguillermo" and "$ws" in split_msg:
+        if message.author.name in propietary and "$ws" in split_msg:
             if word_list_status[0] == 1:
                 word_list_status[0] = 0
                 print("Word command online")
@@ -67,7 +69,7 @@ class Bot(commands.Bot):
                 print("Word command offline")
         
         #Word
-        if message.author.name == "srguillermo" and "$word" in split_msg:
+        if message.author.name in propietary and "$word" in split_msg:
 
             if split_msg[1] == "time":
                 word_list[0] = split_msg[-1]
@@ -111,10 +113,10 @@ class Bot(commands.Bot):
 
 
         #Copy Command
-        if message.author.name == "srguillermo" and "$cs" in split_msg:
+        if message.author.name in propietary and "$cs" in split_msg:
             copy_com_status[0] = 1
             print("Copy command stopped")
-        if message.author.name == "srguillermo" and "$copy" in split_msg:
+        if message.author.name in propietary and "$copy" in split_msg:
             copy_com_status[0] = 0
             copy_com_target[0] = split_msg[-1]
             print(f"Now copying {copy_com_target[0]}'s messages")
@@ -122,7 +124,7 @@ class Bot(commands.Bot):
             await message.channel.send(f"FeelsSpecialMan : {message.content}")
 
         #Act viewers list
-        if message.author.name == "srguillermo" and "$act" in split_msg:
+        if message.author.name in propietary and "$act" in split_msg:
             chatters = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
             chatters.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
             print("Active chatters updated")
@@ -167,7 +169,7 @@ class Bot(commands.Bot):
     @commands.command(aliases=["lt"])
     async def linktree(self, ctx: commands.Context):
         split_msg = ctx.message.content.split(" ")
-        if ctx.author.name == "srguillermo":
+        if ctx.author.name in PROPIETARY:
             for i in range(int(split_msg[-1])):
                 await self.get_channel("ElmiilloR").send("https://linktr.ee/elmillor Bedge Zzz ")
                 await sleep(0.1)
@@ -183,7 +185,7 @@ class Bot(commands.Bot):
     @commands.command(aliases=["sqc"])
     async def soloq(self, ctx: commands.Context):
         split_msg = ctx.message.content.split(" ")
-        if ctx.author.name == "srguillermo":
+        if ctx.author.name in PROPIETARY:
             for i in range(int(split_msg[-1])):
                 await self.get_channel("ElmiilloR").send("La web PeepoGlad 👉 https://soloqchallenge.gg ")
                 await sleep(0.1)
