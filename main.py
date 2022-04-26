@@ -2,7 +2,22 @@ from twitchio.ext import commands
 from random import randint
 from asyncio import sleep
 from requests import get
-from config import config
+import json
+try:
+    with open("config.json", "r") as f:
+        config = json.load(f)
+except FileNotFoundError:
+    temp = {
+        "tmi" : "",
+        "channels" : [""],
+        "authorized" : [""],
+        "propietary" : [""]
+        }
+    with open("config.json", "w") as f:
+        json.dump(temp, f)
+    print(".json config file created. Please enter values on config.json file before use")
+    exit()
+    
 
 TOKEN = config["tmi"]
 CHANNELS = config["channels"]
@@ -21,6 +36,7 @@ except FileNotFoundError:
     with open("word_list.txt", "w") as f:
         f.writelines(temp)
     WORD_LIST = temp
+
 
 class Bot(commands.Bot):
 

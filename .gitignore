@@ -1,4 +1,4 @@
-config.py
 test.py
 __pycache__
 word_list.txt
+config.json
