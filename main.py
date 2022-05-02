@@ -3,6 +3,7 @@ from random import randint
 from asyncio import sleep
 from requests import get
 import json
+import time
 try:
     with open("config.json", "r") as f:
         config = json.load(f)
@@ -85,6 +86,9 @@ class Bot(commands.Bot):
         
         #Word
         if message.author.name in propietary and "$word" in split_msg:
+            
+            if split_msg[1] == "list":
+                print(f"Currently banning for t:{word_list[0]} to following words: {word_list}")
 
             if split_msg[1] == "time":
                 word_list[0] = split_msg[-1]
@@ -105,7 +109,7 @@ class Bot(commands.Bot):
                     if split_msg[i] in word_list:
                         for a in range(len(word_list)):
                             if split_msg[i] == word_list[a]:
-                                del word_list [a]
+                                del word_list[a]
                                 print(f"{word_list[a]} removed from word list")
                 with open("word_list.txt", "w") as f:
                     f.write(",".join(word_list))
@@ -157,9 +161,11 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[3])
                 await channel.send(f"/timeout {username} {duration}")
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
             except IndexError:
                 await ctx.send(f"/timeout {username} {duration}")
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
         else: pass
 
@@ -173,9 +179,11 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[2])
                 await channel.send(f"/unban {username}")
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Nunban command used by {ctx.author.name} : {username} ({channel})")
             except IndexError:
                 await ctx.send(f"/unban {username}")
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
         else: pass
 
@@ -209,7 +217,20 @@ class Bot(commands.Bot):
     @commands.command()
     async def help(self, ctx: commands.Context):
         if ctx.author.name in AUTHORIZED:
-            print("")
+
+            print()
+            print("sqc / soloq -- spam msg")
+            print("getrandom / gr / printrandom -- send random viewer")
+            print("linktree / lt -- linktree spam")
+            print("nunban -- unban [user]")
+            print("namess -- ban [user]")
+            print("copy -- start copy [user]")
+            print("cs -- stop copy command")
+            print("act -- update viewer list")
+            print("word -- word list ban [list/time/add/remove/clean]")
+            print("ws -- word command switch")
+            print("con -- console log switch")
+            print()
     
     #Exceptions            
     @commands.command(aliases=["copystop", "cs", "copy", "act", "ws", "word"])
