@@ -288,8 +288,7 @@ class Bot(commands.Bot):
     #Random
     @commands.command(aliases=["gr", "printrandom"])
     async def getrandom(self, ctx: commands.Context):
-        rand_view = CHATTERS[random.randint(0, len(CHATTERS))]
-        await ctx.send(rand_view)
+        await ctx.send(CHATTERS[random.randint(0, len(CHATTERS))])
     
     
     """ 
