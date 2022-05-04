@@ -26,12 +26,8 @@ CHANNELS = config["channels"]
 AUTHORIZED = config["authorized"]
 PROPIETARY = config["propietary"]
 SLOT_EMOTE = config["slot"]
-CONSOLE_MSG_STATUS = [False]
-COPY_COM_STATUS = [False]
-COPY_COM_TARGET = [0]
 CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
 CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-WORD_LIST_STATUS = [False]
 try:
     WORD_LIST = open("word_list.txt", "r").read().split(",")
 except FileNotFoundError:
@@ -41,6 +37,11 @@ except FileNotFoundError:
     WORD_LIST = temp
 
 slot_mach_status = [False]
+console_msg_status = [False]
+word_list_status = [False]
+copy_com_status = [False]
+copy_com_target = [0]
+vanish_com_status = [True]
 
 class Bot(commands.Bot):
 
@@ -53,17 +54,7 @@ class Bot(commands.Bot):
         print("BOT READY")
 
     async def event_message(self, message):
-
-        #Variables
         split_msg = message.content.lower().split(" ")
-        propietary = PROPIETARY
-        console_msg_status = CONSOLE_MSG_STATUS
-        copy_com_status = COPY_COM_STATUS
-        copy_com_target = COPY_COM_TARGET
-        chatters = CHATTERS
-        word_list = WORD_LIST
-        word_list_status = WORD_LIST_STATUS
-        slot_emote = SLOT_EMOTE
 
         #Console msg
         if message.echo:
@@ -71,99 +62,160 @@ class Bot(commands.Bot):
         if console_msg_status[0] == True:
             print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
+
         
-
-        #Console msg switch
-        if message.author.name in propietary and "$con" in split_msg:
-            if console_msg_status[0] == False:
-                console_msg_status[0] = True
-            elif console_msg_status[0] == True:
-                console_msg_status[0] = False
-        
-
-        #Word list switch
-        if message.author.name in propietary and "$ws" in split_msg:
-            if word_list_status[0] == False:
-                word_list_status[0] = True
-                print("Word command online")
-            elif word_list_status[0] == True:
-                word_list_status[0] = False
-                print("Word command offline")
-
-
-        #Slot command switch
-        if message.author.name in propietary and "$ss" in split_msg:
-            if slot_mach_status[0] == False:
-                slot_mach_status[0] = True
-            elif slot_mach_status[0] == True:
-                slot_mach_status[0] = False
-
-
-        #Word
-        if message.author.name in propietary and "$word" in split_msg:
-            
-            if split_msg[1] == "list":
-                print(f"Currently banning for t:{word_list[0]} to following words: {word_list}")
-
-            if split_msg[1] == "time":
-                word_list[0] = split_msg[-1]
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(word_list))
-                print(f"Time in word command changed to {split_msg[-1]}")
-
-            if split_msg[1] == "add":
-                for i in range(2, len(split_msg)):
-                    if split_msg[i] not in word_list:
-                        word_list.append(split_msg[i])
-                        print(f"{split_msg[i]} added to word list")
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(word_list))
-            
-            if split_msg[1] == "remove":
-                for i in range(2, len(split_msg)):
-                    if split_msg[i] in word_list:
-                        for a in range(len(word_list)):
-                            if split_msg[i] == word_list[a]:
-                                del word_list[a]
-                                print(f"{word_list[a]} removed from word list")
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(word_list))
-            
-            if split_msg[1] == "clean":
-                for i in range(1, len(word_list)):
-                    del word_list[i]
-                    print(f"Word list cleaned")
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(word_list))
-        
+        #WordList Use
         if word_list_status[0] == True:
             incl = False
-            for i in range(1, len(word_list)):
-                if word_list[i] in split_msg:
+            for i in range(1, len(WORD_LIST)):
+                if WORD_LIST[i] in split_msg:
                     incl = True
             if incl == True:
-                await message.channel.send(f"/timeout {message.author.name} {word_list[0]}")
+                await message.channel.send(f"/timeout {message.author.name} {WORD_LIST[0]}")
             incl = False
 
 
         #Copy Command
-        if message.author.name in propietary and "$cs" in split_msg:
+        if copy_com_status[0] == True: 
+            if copy_com_target[-1] == message.author.name:
+                await message.channel.send(f"FeelsSpecialMan : {message.content}")
+
+
+    #Switches
+    #All Off
+    @commands.command()
+    async def alloff(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            console_msg_status[0] = False
+            word_list_status[0] = False
+            slot_mach_status[0] = False
+            copy_com_status[0] = False
+            vanish_com_status[0] = False
+        else : pass
+    #All On
+    @commands.command()
+    async def allon(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            console_msg_status[0] = True
+            word_list_status[0] = True
+            slot_mach_status[0] = True
+            vanish_com_status[0] = True
+        else : pass
+    #Current Check
+    @commands.command()
+    async def current(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            print()
+            print(f"Console: {console_msg_status[0]} [$con]")
+            print(f"Word Command: {word_list_status[0]} [$ws]")
+            print(f"Slot Command: {slot_mach_status[0]} [$ss]")
+            print(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
+            print(f"Vanish Command: {vanish_com_status[0]}")
+            print()
+        else : pass
+    #Console Msg
+    @commands.command()
+    async def con(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            if console_msg_status[0] == False:
+                console_msg_status[0] = True
+            elif console_msg_status[0] == True:
+                console_msg_status[0] = False
+        else : pass
+    #Word List
+    @commands.command()
+    async def ws(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            if word_list_status[0] == False:
+                word_list_status[0] = True
+            elif word_list_status[0] == True:
+                word_list_status[0] = False
+        else : pass
+    #Slot
+    @commands.command()
+    async def ss(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            if slot_mach_status[0] == False:
+                slot_mach_status[0] = True
+            elif slot_mach_status[0] == True:
+                slot_mach_status[0] = False
+        else : pass
+    #Vanish
+    @commands.command()
+    async def vs(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            if vanish_com_status[0] == True:
+                vanish_com_status[0] = False
+            elif vanish_com_status[0] == False:
+                vanish_com_status[0] = True
+        else : pass
+    #ChattersList
+    @commands.command()
+    async def act(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
+            CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
+            print("Active chatters updated")
+    #CopyStop
+    @commands.command(aliases=["copystop"])
+    async def cs(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
             copy_com_status[0] = False
             print("Copy command stopped")
-        if message.author.name in propietary and "$copy" in split_msg:
+        else : pass
+    #CopyTarget
+    @commands.command()
+    async def copy(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            split_msg = ctx.message.content.split(" ")
             copy_com_status[0] = True
             copy_com_target[0] = split_msg[-1]
             print(f"Now copying {copy_com_target[0]}'s messages")
-        if copy_com_status[0] == True and message.author.name == copy_com_target[-1]:
-            await message.channel.send(f"FeelsSpecialMan : {message.content}")
-
-        #Act viewers list
-        if message.author.name in propietary and "$act" in split_msg:
-            chatters = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
-            chatters.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-            print("Active chatters updated")
+        else : pass
 
 
+    #Word
+    @commands.command()
+    async def word(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            split_msg = ctx.message.content.lower().split(" ")
+
+            if split_msg[1] == "list":
+                print(f"Currently banning for t:{WORD_LIST[0]} to following words: {WORD_LIST}")
+
+            if split_msg[1] == "time":
+                WORD_LIST[0] = split_msg[-1]
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(WORD_LIST))
+                print(f"Time in word command changed to {split_msg[-1]}")
+
+            if split_msg[1] == "add":
+                for i in range(2, len(split_msg)):
+                    if split_msg[i] not in WORD_LIST:
+                        WORD_LIST.append(split_msg[i])
+                        print(f"{split_msg[i]} added to word list")
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(WORD_LIST))
+            
+            if split_msg[1] == "remove":
+                for i in range(2, len(split_msg)):
+                    if split_msg[i] in WORD_LIST:
+                        for a in range(len(WORD_LIST)):
+                            if split_msg[i] == WORD_LIST[a]:
+                                del WORD_LIST[a]
+                                print(f"{WORD_LIST[a]} removed from word list")
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(WORD_LIST))
+            
+            if split_msg[1] == "clean":
+                for i in range(1, len(WORD_LIST)):
+                    del WORD_LIST[i]
+                    print(f"Word list cleaned")
+                with open("word_list.txt", "w") as f:
+                    f.write(",".join(WORD_LIST))
+        else : pass
+    
+    
     #Namess
     @commands.command()
     async def namess(self, ctx: commands.Context):
@@ -182,7 +234,8 @@ class Bot(commands.Bot):
                 await ctx.send(f"/timeout {username} {duration}")
                 print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
-        else: pass
+        else : pass
+
 
     #Slot
     @commands.command()
@@ -229,23 +282,15 @@ class Bot(commands.Bot):
             for i in range(int(split_msg[-1])):
                 await self.get_channel("ElmiilloR").send("https://linktr.ee/elmillor Bedge Zzz ")
                 await sleep(0.1)
+        else : pass
 
 
     #Random
     @commands.command(aliases=["gr", "printrandom"])
     async def getrandom(self, ctx: commands.Context):
-        chatters = CHATTERS
-        await ctx.send(chatters[random.randint(0, len(chatters))])
+        rand_view = CHATTERS[random.randint(0, len(CHATTERS))]
+        await ctx.send(rand_view)
     
-    
-    #SoloQChallenge
-    @commands.command(aliases=["sqc"])
-    async def soloq(self, ctx: commands.Context):
-        split_msg = ctx.message.content.split(" ")
-        if ctx.author.name in PROPIETARY:
-            for i in range(int(split_msg[-1])):
-                await self.get_channel("ElmiilloR").send("La web PeepoGlad 👉 https://soloqchallenge.gg ")
-                await sleep(0.1)
     
     """ 
     @commands.command()
@@ -260,7 +305,9 @@ class Bot(commands.Bot):
     #Vanish Command
     @commands.command()
     async def v(self, ctx: commands.Context):
-        await ctx.send(f"/timeout {ctx.author.name} 1")
+        if vanish_com_status[0] == True:
+            await ctx.send(f"/timeout {ctx.author.name} 1")
+        else : pass
 
 
     #Help
@@ -269,23 +316,24 @@ class Bot(commands.Bot):
         if ctx.author.name in AUTHORIZED:
 
             print()
-            print("sqc / soloq -- spam msg")
+            print("help -- this command")
+            print("v -- self 1 sec timeout")
+            print("act -- update viewer list")
             print("getrandom / gr / printrandom -- send random viewer")
             print("linktree / lt -- linktree spam")
-            print("nunban -- unban [user]")
             print("namess -- ban [user]")
+            print("nunban -- unban [user]")
             print("copy -- start copy [user]")
             print("cs -- stop copy command")
-            print("act -- update viewer list")
             print("word -- word list ban [list/time/add/remove/clean]")
             print("ws -- word command switch")
             print("con -- console log switch")
-            print()
-    
-    #Exceptions            
-    @commands.command(aliases=["copystop", "cs", "copy", "act", "ws", "word", "ss"])
-    async def con(self, ctx: commands.Context):
-        pass      
+            print("ss -- slots command switch")
+            print("alloff -- shut down all commands")
+            print("allon -- actiate all commands")
+            print("status -- current status of all commands")
+            print("slot -- slot command")
+            print()     
 
 
 if __name__ == "__main__":
