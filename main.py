@@ -1,5 +1,5 @@
 from twitchio.ext import commands
-from random import randint
+import random
 from asyncio import sleep
 from requests import get
 import json
@@ -12,7 +12,8 @@ except FileNotFoundError:
         "tmi" : "",
         "channels" : [""],
         "authorized" : [""],
-        "propietary" : [""]
+        "propietary" : [""],
+        "slot" : [""]
         }
     with open("config.json", "w") as f:
         json.dump(temp, f)
@@ -24,12 +25,13 @@ TOKEN = config["tmi"]
 CHANNELS = config["channels"]
 AUTHORIZED = config["authorized"]
 PROPIETARY = config["propietary"]
-CONSOLE_MSG_STATUS = [1]
-COPY_COM_STATUS = [1]
+SLOT_EMOTE = config["slot"]
+CONSOLE_MSG_STATUS = [False]
+COPY_COM_STATUS = [False]
 COPY_COM_TARGET = [0]
 CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
 CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-WORD_LIST_STATUS = [1]
+WORD_LIST_STATUS = [False]
 try:
     WORD_LIST = open("word_list.txt", "r").read().split(",")
 except FileNotFoundError:
@@ -38,6 +40,7 @@ except FileNotFoundError:
         f.writelines(temp)
     WORD_LIST = temp
 
+slot_mach_status = [False]
 
 class Bot(commands.Bot):
 
@@ -60,30 +63,42 @@ class Bot(commands.Bot):
         chatters = CHATTERS
         word_list = WORD_LIST
         word_list_status = WORD_LIST_STATUS
+        slot_emote = SLOT_EMOTE
 
         #Console msg
         if message.echo:
             return
-        if console_msg_status[0] == 0:
+        if console_msg_status[0] == True:
             print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
         
+
         #Console msg switch
         if message.author.name in propietary and "$con" in split_msg:
-            if console_msg_status[0] == 1:
-                console_msg_status[0] = 0
-            elif console_msg_status[0] == 0:
-                console_msg_status[0] = 1
+            if console_msg_status[0] == False:
+                console_msg_status[0] = True
+            elif console_msg_status[0] == True:
+                console_msg_status[0] = False
         
+
         #Word list switch
         if message.author.name in propietary and "$ws" in split_msg:
-            if word_list_status[0] == 1:
-                word_list_status[0] = 0
+            if word_list_status[0] == False:
+                word_list_status[0] = True
                 print("Word command online")
-            elif word_list_status[0] == 0:
-                word_list_status[0] = 1
+            elif word_list_status[0] == True:
+                word_list_status[0] = False
                 print("Word command offline")
-        
+
+
+        #Slot command switch
+        if message.author.name in propietary and "$ss" in split_msg:
+            if slot_mach_status[0] == False:
+                slot_mach_status[0] = True
+            elif slot_mach_status[0] == True:
+                slot_mach_status[0] = False
+
+
         #Word
         if message.author.name in propietary and "$word" in split_msg:
             
@@ -121,7 +136,7 @@ class Bot(commands.Bot):
                 with open("word_list.txt", "w") as f:
                     f.write(",".join(word_list))
         
-        if word_list_status[0] == 0:
+        if word_list_status[0] == True:
             incl = False
             for i in range(1, len(word_list)):
                 if word_list[i] in split_msg:
@@ -133,13 +148,13 @@ class Bot(commands.Bot):
 
         #Copy Command
         if message.author.name in propietary and "$cs" in split_msg:
-            copy_com_status[0] = 1
+            copy_com_status[0] = False
             print("Copy command stopped")
         if message.author.name in propietary and "$copy" in split_msg:
-            copy_com_status[0] = 0
+            copy_com_status[0] = True
             copy_com_target[0] = split_msg[-1]
             print(f"Now copying {copy_com_target[0]}'s messages")
-        if copy_com_status[0] == 0 and message.author.name == copy_com_target[-1]:
+        if copy_com_status[0] == True and message.author.name == copy_com_target[-1]:
             await message.channel.send(f"FeelsSpecialMan : {message.content}")
 
         #Act viewers list
@@ -147,8 +162,8 @@ class Bot(commands.Bot):
             chatters = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
             chatters.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
             print("Active chatters updated")
-    
-    
+
+
     #Namess
     @commands.command()
     async def namess(self, ctx: commands.Context):
@@ -169,7 +184,25 @@ class Bot(commands.Bot):
                 print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
         else: pass
 
-    
+    #Slot
+    @commands.command()
+    @commands.cooldown(1, 1, commands.cooldowns.Bucket.user)
+    async def slot(self, ctx: commands.Context):
+        if slot_mach_status[0] == True:
+            slot_emote = SLOT_EMOTE
+            slot_chance = random.randint(1, 4)
+            if slot_chance == 2:
+                slot_win = random.randint(0, len(slot_emote) - 1)
+                await ctx.send(f"[ {slot_emote[slot_win]} | {slot_emote[slot_win]} | {slot_emote[slot_win]} ] WIN Pog")
+            else:
+                slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
+                if slot_random[0] == slot_random[1] == slot_random[2]:
+                    while slot_random[0] == slot_random[1] == slot_random[2]:
+                        slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
+                await ctx.send(f"[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ] LOSE")
+        else : pass            
+
+        
     #Nunban
     @commands.command()
     async def nunban(self, ctx: commands.Context):
@@ -197,11 +230,12 @@ class Bot(commands.Bot):
                 await self.get_channel("ElmiilloR").send("https://linktr.ee/elmillor Bedge Zzz ")
                 await sleep(0.1)
 
+
     #Random
     @commands.command(aliases=["gr", "printrandom"])
     async def getrandom(self, ctx: commands.Context):
         chatters = CHATTERS
-        await ctx.send(chatters[randint(0, len(chatters))])
+        await ctx.send(chatters[random.randint(0, len(chatters))])
     
     
     #SoloQChallenge
@@ -213,6 +247,22 @@ class Bot(commands.Bot):
                 await self.get_channel("ElmiilloR").send("La web PeepoGlad 👉 https://soloqchallenge.gg ")
                 await sleep(0.1)
     
+    """ 
+    @commands.command()
+    @commands.cooldown(1, 1)
+    async def belvin(self, ctx: commands.Context):
+        try:
+            if ctx.author.badges["vip"] == "1":
+                await ctx.send(f"/timeout belvinxd 60")
+        except KeyError: pass
+    """
+
+    #Vanish Command
+    @commands.command()
+    async def v(self, ctx: commands.Context):
+        await ctx.send(f"/timeout {ctx.author.name} 1")
+
+
     #Help
     @commands.command()
     async def help(self, ctx: commands.Context):
@@ -233,7 +283,7 @@ class Bot(commands.Bot):
             print()
     
     #Exceptions            
-    @commands.command(aliases=["copystop", "cs", "copy", "act", "ws", "word"])
+    @commands.command(aliases=["copystop", "cs", "copy", "act", "ws", "word", "ss"])
     async def con(self, ctx: commands.Context):
         pass      
 
