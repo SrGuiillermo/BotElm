@@ -112,6 +112,7 @@ class Bot(commands.Bot):
             print(f"Slot Command: {slot_mach_status[0]} [$ss]")
             print(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
             print(f"Vanish Command: {vanish_com_status[0]}")
+            print(f"Feiipito Command: {feiipito_com_status[0]} [$fs]")
             print()
     #Console Msg
     @commands.command()
