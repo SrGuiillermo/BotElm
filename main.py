@@ -45,6 +45,7 @@ copy_com_status = [False]
 copy_com_target = [0]
 vanish_com_status = [True]
 feiipito_com_status = [True]
+feiipito_on_cooldown = [False]
 
 
 class Bot(commands.Bot):
@@ -220,15 +221,15 @@ class Bot(commands.Bot):
     #Feiipito
     @commands.command()
     async def feiipito(self, ctx: commands.Context):
-        if feiipito_com_status[0] == True:
+        if feiipito_com_status[0] == True and feiipito_on_cooldown[0] == False:
             config["feiipito"] += 1
             with open("config.json", "w") as f:
                 json.dump(config, f)
             count = config["feiipito"]
             await ctx.send(f"Feiipito nos ha tocado {count} veces PoroSad")
-            feiipito_com_status[0] = False
+            feiipito_on_cooldown[0] = True
             await sleep(40)
-            feiipito_com_status[0] = True
+            feiipito_on_cooldown[0] = False
 
 
     #Namess
