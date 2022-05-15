@@ -219,7 +219,6 @@ class Bot(commands.Bot):
             
     #Feiipito
     @commands.command()
-    @commands.cooldown(60, 1)
     async def feiipito(self, ctx: commands.Context):
         if feiipito_com_status[0] == True:
             config["feiipito"] += 1
@@ -227,6 +226,9 @@ class Bot(commands.Bot):
                 json.dump(config, f)
             count = config["feiipito"]
             await ctx.send(f"Feiipito nos ha tocado {count} veces PoroSad")
+            feiipito_com_status[0] = False
+            await sleep(40)
+            feiipito_com_status[0] = True
 
 
     #Namess
