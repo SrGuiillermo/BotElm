@@ -147,6 +147,7 @@ class Bot(commands.Bot):
             elif vanish_com_status[0] == False:
                 vanish_com_status[0] = True
     #Feiipito
+    @commands.command()
     async def fs(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
             if feiipito_com_status[0] == True:
