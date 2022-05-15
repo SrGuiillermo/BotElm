@@ -13,13 +13,13 @@ except FileNotFoundError:
         "channels" : [""],
         "authorized" : [""],
         "propietary" : [""],
-        "slot" : [""]
+        "slot" : [""],
         }
     with open("config.json", "w") as f:
         json.dump(temp, f)
     print(".json config file created. Please enter values on config.json file before use")
     exit()
-    
+
 
 TOKEN = config["tmi"]
 CHANNELS = config["channels"]
@@ -42,6 +42,8 @@ word_list_status = [False]
 copy_com_status = [False]
 copy_com_target = [0]
 vanish_com_status = [True]
+feiipito_com_status = [True]
+
 
 class Bot(commands.Bot):
 
@@ -63,7 +65,7 @@ class Bot(commands.Bot):
             print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
 
-        
+
         #WordList Use
         if word_list_status[0] == True:
             incl = False
@@ -71,13 +73,12 @@ class Bot(commands.Bot):
                 if WORD_LIST[i] in split_msg:
                     incl = True
             if incl == True:
+                await sleep(0.8)
                 await message.channel.send(f"/timeout {message.author.name} {WORD_LIST[0]}")
             incl = False
 
-
         #Copy Command
-        if copy_com_status[0] == True: 
-            if copy_com_target[-1] == message.author.name:
+        if copy_com_status[0] == True and copy_com_target[-1] == message.author.name:
                 await message.channel.send(f"FeelsSpecialMan : {message.content}")
 
 
@@ -91,7 +92,6 @@ class Bot(commands.Bot):
             slot_mach_status[0] = False
             copy_com_status[0] = False
             vanish_com_status[0] = False
-        else : pass
     #All On
     @commands.command()
     async def allon(self, ctx: commands.Context):
@@ -100,7 +100,6 @@ class Bot(commands.Bot):
             word_list_status[0] = True
             slot_mach_status[0] = True
             vanish_com_status[0] = True
-        else : pass
     #Current Check
     @commands.command()
     async def current(self, ctx: commands.Context):
@@ -112,7 +111,6 @@ class Bot(commands.Bot):
             print(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
             print(f"Vanish Command: {vanish_com_status[0]}")
             print()
-        else : pass
     #Console Msg
     @commands.command()
     async def con(self, ctx: commands.Context):
@@ -121,7 +119,6 @@ class Bot(commands.Bot):
                 console_msg_status[0] = True
             elif console_msg_status[0] == True:
                 console_msg_status[0] = False
-        else : pass
     #Word List
     @commands.command()
     async def ws(self, ctx: commands.Context):
@@ -130,7 +127,6 @@ class Bot(commands.Bot):
                 word_list_status[0] = True
             elif word_list_status[0] == True:
                 word_list_status[0] = False
-        else : pass
     #Slot
     @commands.command()
     async def ss(self, ctx: commands.Context):
@@ -139,7 +135,6 @@ class Bot(commands.Bot):
                 slot_mach_status[0] = True
             elif slot_mach_status[0] == True:
                 slot_mach_status[0] = False
-        else : pass
     #Vanish
     @commands.command()
     async def vs(self, ctx: commands.Context):
@@ -148,7 +143,13 @@ class Bot(commands.Bot):
                 vanish_com_status[0] = False
             elif vanish_com_status[0] == False:
                 vanish_com_status[0] = True
-        else : pass
+    #Feiipito
+    async def fs(self, ctx: commands.Context):
+        if ctx.author.name in PROPIETARY:
+            if feiipito_com_status[0] == True:
+                feiipito_com_status[0] = False
+            elif feiipito_com_status[0] == False:
+                feiipito_com_status[0] = True
     #ChattersList
     @commands.command()
     async def act(self, ctx: commands.Context):
@@ -162,7 +163,6 @@ class Bot(commands.Bot):
         if ctx.author.name in PROPIETARY:
             copy_com_status[0] = False
             print("Copy command stopped")
-        else : pass
     #CopyTarget
     @commands.command()
     async def copy(self, ctx: commands.Context):
@@ -171,7 +171,6 @@ class Bot(commands.Bot):
             copy_com_status[0] = True
             copy_com_target[0] = split_msg[-1]
             print(f"Now copying {copy_com_target[0]}'s messages")
-        else : pass
 
 
     #Word
@@ -213,9 +212,18 @@ class Bot(commands.Bot):
                     print(f"Word list cleaned")
                 with open("word_list.txt", "w") as f:
                     f.write(",".join(WORD_LIST))
-        else : pass
-    
-    
+            
+    #Feiipito
+    @commands.command()
+    async def feiipito(self, ctx: commands.Context):
+        if feiipito_com_status[0] == True:
+            config["feiipito"] += 1
+            with open("config.json", "w") as f:
+                json.dump(config, f)
+            count = config["feiipito"]
+            await ctx.send(f"Feiipito nos ha tocado {count} veces PoroSad")
+
+
     #Namess
     @commands.command()
     async def namess(self, ctx: commands.Context):
@@ -234,7 +242,6 @@ class Bot(commands.Bot):
                 await ctx.send(f"/timeout {username} {duration}")
                 print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
-        else : pass
 
 
     #Slot
@@ -247,15 +254,28 @@ class Bot(commands.Bot):
             if slot_chance == 2:
                 slot_win = random.randint(0, len(slot_emote) - 1)
                 await ctx.send(f"[ {slot_emote[slot_win]} | {slot_emote[slot_win]} | {slot_emote[slot_win]} ] WIN Pog")
+                await ctx.send("Esperando usuario")
+                original_au = ctx.author.name
+                while True:
+                    message = await self.wait_for("message")
+                    try:
+                        author = message[0].author.name
+                        if author == original_au:
+                            timeout = message[0].content.lower().split(" ")
+                            await ctx.send(f"/timeout {timeout[0]} 60")
+                            break
+                    except AttributeError:
+                        pass
             else:
                 slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
                 if slot_random[0] == slot_random[1] == slot_random[2]:
                     while slot_random[0] == slot_random[1] == slot_random[2]:
                         slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
                 await ctx.send(f"[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ] LOSE")
-        else : pass            
+                await sleep(0.5)
+                await ctx.send(f"/timeout {ctx.author.name} 60")         
 
-        
+
     #Nunban
     @commands.command()
     async def nunban(self, ctx: commands.Context):
@@ -271,7 +291,6 @@ class Bot(commands.Bot):
                 await ctx.send(f"/unban {username}")
                 print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
                 print(f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
-        else: pass
 
 
     #Linktree spam command
@@ -282,7 +301,6 @@ class Bot(commands.Bot):
             for i in range(int(split_msg[-1])):
                 await self.get_channel("ElmiilloR").send("https://linktr.ee/elmillor Bedge Zzz ")
                 await sleep(0.1)
-        else : pass
 
 
     #Random
@@ -301,12 +319,12 @@ class Bot(commands.Bot):
         except KeyError: pass
     """
 
+
     #Vanish Command
     @commands.command()
     async def v(self, ctx: commands.Context):
         if vanish_com_status[0] == True:
             await ctx.send(f"/timeout {ctx.author.name} 1")
-        else : pass
 
 
     #Help
