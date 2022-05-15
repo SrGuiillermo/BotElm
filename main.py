@@ -19,6 +19,7 @@ except FileNotFoundError:
     with open("config.json", "w") as f:
         json.dump(temp, f)
     print(".json config file created. Please enter values on config.json file before use")
+    input()
     exit()
 
 
