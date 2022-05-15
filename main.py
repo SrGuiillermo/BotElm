@@ -39,6 +39,7 @@ except FileNotFoundError:
     WORD_LIST = temp
 
 slot_mach_status = [False]
+slot_on_cooldown = [False]
 console_msg_status = [False]
 word_list_status = [False]
 copy_com_status = [False]
@@ -254,9 +255,8 @@ class Bot(commands.Bot):
 
     #Slot
     @commands.command()
-    @commands.cooldown(1, 1, commands.cooldowns.Bucket.user)
     async def slot(self, ctx: commands.Context):
-        if slot_mach_status[0] == True:
+        if slot_mach_status[0] == True and slot_on_cooldown[0] == False:
             slot_emote = SLOT_EMOTE
             slot_chance = random.randint(1, 4)
             if slot_chance == 2:
@@ -281,7 +281,10 @@ class Bot(commands.Bot):
                         slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
                 await ctx.send(f"[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ] LOSE")
                 await sleep(0.5)
-                await ctx.send(f"/timeout {ctx.author.name} 60")         
+                await ctx.send(f"/timeout {ctx.author.name} 60")
+            slot_on_cooldown[0] = True
+            await sleep(1)
+            slot_on_cooldown[0] = False         
 
 
     #Nunban
