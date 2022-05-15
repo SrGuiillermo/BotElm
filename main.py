@@ -96,6 +96,7 @@ class Bot(commands.Bot):
             slot_mach_status[0] = False
             copy_com_status[0] = False
             vanish_com_status[0] = False
+            print("All commands turned off")
     #All On
     @commands.command()
     async def allon(self, ctx: commands.Context):
@@ -104,6 +105,7 @@ class Bot(commands.Bot):
             word_list_status[0] = True
             slot_mach_status[0] = True
             vanish_com_status[0] = True
+            print("All commands turned on")
     #Current Check
     @commands.command()
     async def current(self, ctx: commands.Context):
@@ -122,40 +124,50 @@ class Bot(commands.Bot):
         if ctx.author.name in PROPIETARY:
             if console_msg_status[0] == False:
                 console_msg_status[0] = True
+                print("Console logs turned on")
             elif console_msg_status[0] == True:
                 console_msg_status[0] = False
+                print("Console logs turned off")
     #Word List
     @commands.command()
     async def ws(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
             if word_list_status[0] == False:
                 word_list_status[0] = True
+                print("Word command turned on")
             elif word_list_status[0] == True:
                 word_list_status[0] = False
+                print("Word command turned off")
     #Slot
     @commands.command()
     async def ss(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
             if slot_mach_status[0] == False:
                 slot_mach_status[0] = True
+                print("Slot command turned on")
             elif slot_mach_status[0] == True:
                 slot_mach_status[0] = False
+                print("Slot command turned off")
     #Vanish
     @commands.command()
     async def vs(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
             if vanish_com_status[0] == True:
                 vanish_com_status[0] = False
+                print("Vanish command turned off")
             elif vanish_com_status[0] == False:
                 vanish_com_status[0] = True
+                print("Vanish command turned on")
     #Feiipito
     @commands.command()
     async def fs(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
             if feiipito_com_status[0] == True:
                 feiipito_com_status[0] = False
+                print("Feiipito command turned off")
             elif feiipito_com_status[0] == False:
                 feiipito_com_status[0] = True
+                print("Feiipito command turned on")
     #ChattersList
     @commands.command()
     async def act(self, ctx: commands.Context):
@@ -261,8 +273,7 @@ class Bot(commands.Bot):
             slot_chance = random.randint(1, 4)
             if slot_chance == 2:
                 slot_win = random.randint(0, len(slot_emote) - 1)
-                await ctx.send(f"[ {slot_emote[slot_win]} | {slot_emote[slot_win]} | {slot_emote[slot_win]} ] WIN Pog")
-                await ctx.send("Esperando usuario")
+                await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_win]} | {slot_emote[slot_win]} | {slot_emote[slot_win]} ]ㅤ WIN Pog Esperando un usuario peepoEvil")
                 original_au = ctx.author.name
                 while True:
                     message = await self.wait_for("message")
@@ -279,7 +290,7 @@ class Bot(commands.Bot):
                 if slot_random[0] == slot_random[1] == slot_random[2]:
                     while slot_random[0] == slot_random[1] == slot_random[2]:
                         slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
-                await ctx.send(f"[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ] LOSE")
+                await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ]ㅤ LOSE -1m PepeGiggle")
                 await sleep(0.5)
                 await ctx.send(f"/timeout {ctx.author.name} 60")
             slot_on_cooldown[0] = True
