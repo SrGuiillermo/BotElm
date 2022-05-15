@@ -14,6 +14,7 @@ except FileNotFoundError:
         "authorized" : [""],
         "propietary" : [""],
         "slot" : [""],
+        "feiipito" : 0
         }
     with open("config.json", "w") as f:
         json.dump(temp, f)
