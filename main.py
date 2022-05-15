@@ -219,6 +219,7 @@ class Bot(commands.Bot):
             
     #Feiipito
     @commands.command()
+    @commands.cooldown(60, 1)
     async def feiipito(self, ctx: commands.Context):
         if feiipito_com_status[0] == True:
             config["feiipito"] += 1
