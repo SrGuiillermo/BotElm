@@ -5,8 +5,8 @@ from requests import get
 import json
 import time
 try:
-    with open("config.json", "r") as f:
-        config = json.load(f)
+    with open("confg.json", "r") as f:
+        confg = json.load(f)
 except FileNotFoundError:
     temp = {
         "tmi" : "",
@@ -14,20 +14,20 @@ except FileNotFoundError:
         "authorized" : [""],
         "propietary" : [""],
         "slot" : [""],
-        "feiipito" : 0
+        "feiipito_count" : 0
         }
-    with open("config.json", "w") as f:
+    with open("confg.json", "w") as f:
         json.dump(temp, f)
     print(".json config file created. Please enter values on config.json file before use")
     input()
     exit()
 
 
-TOKEN = config["tmi"]
-CHANNELS = config["channels"]
-AUTHORIZED = config["authorized"]
-PROPIETARY = config["propietary"]
-SLOT_EMOTE = config["slot"]
+TOKEN = confg["tmi"]
+CHANNELS = confg["channels"]
+AUTHORIZED = confg["authorized"]
+PROPIETARY = confg["propietary"]
+SLOT_EMOTE = confg["slot"]
 CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
 CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
 try:
@@ -38,13 +38,14 @@ except FileNotFoundError:
         f.writelines(temp)
     WORD_LIST = temp
 
-slot_mach_status = [False]
-slot_on_cooldown = [False]
+
 console_msg_status = [False]
 word_list_status = [False]
+vanish_com_status = [True]
+slot_mach_status = [False]
+slot_on_cooldown = [False]
 copy_com_status = [False]
 copy_com_target = [0]
-vanish_com_status = [True]
 feiipito_com_status = [True]
 feiipito_on_cooldown = [False]
 
@@ -69,15 +70,18 @@ class Bot(commands.Bot):
             print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
 
+        """if split_msg[0] == "livee":
+            a = await self.fetch_streams(user_logins=["elmiillor"])
+            print(a)"""
 
-        #WordList Use
+        #WordList
         if word_list_status[0] == True:
             incl = False
             for i in range(1, len(WORD_LIST)):
                 if WORD_LIST[i] in split_msg:
                     incl = True
             if incl == True:
-                await sleep(0.8)
+                await sleep(0.4)
                 await message.channel.send(f"/timeout {message.author.name} {WORD_LIST[0]}")
             incl = False
 
@@ -96,6 +100,7 @@ class Bot(commands.Bot):
             slot_mach_status[0] = False
             copy_com_status[0] = False
             vanish_com_status[0] = False
+            feiipito_com_status[0] = False
             print("All commands turned off")
     #All On
     @commands.command()
@@ -105,6 +110,7 @@ class Bot(commands.Bot):
             word_list_status[0] = True
             slot_mach_status[0] = True
             vanish_com_status[0] = True
+            feiipito_com_status[0] = True
             print("All commands turned on")
     #Current Check
     @commands.command()
@@ -168,13 +174,6 @@ class Bot(commands.Bot):
             elif feiipito_com_status[0] == False:
                 feiipito_com_status[0] = True
                 print("Feiipito command turned on")
-    #ChattersList
-    @commands.command()
-    async def act(self, ctx: commands.Context):
-        if ctx.author.name in PROPIETARY:
-            CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
-            CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-            print("Active chatters updated")
     #CopyStop
     @commands.command(aliases=["copystop"])
     async def cs(self, ctx: commands.Context):
@@ -198,7 +197,13 @@ class Bot(commands.Bot):
             split_msg = ctx.message.content.lower().split(" ")
 
             if split_msg[1] == "list":
-                print(f"Currently banning for t:{WORD_LIST[0]} to following words: {WORD_LIST}")
+                try:
+                    word_all_list = WORD_LIST[1]
+                    for i in range(2, len(WORD_LIST)):
+                        word_all_list = word_all_list + "," + WORD_LIST[i]
+                    print(f"Currently banning for t = {WORD_LIST[0]} the following words: {word_all_list}")
+                except IndexError:
+                    print(f"Currently not banning any word for t = {WORD_LIST[0]}")
 
             if split_msg[1] == "time":
                 WORD_LIST[0] = split_msg[-1]
@@ -225,9 +230,10 @@ class Bot(commands.Bot):
                     f.write(",".join(WORD_LIST))
             
             if split_msg[1] == "clean":
-                for i in range(1, len(WORD_LIST)):
-                    del WORD_LIST[i]
-                    print(f"Word list cleaned")
+                word_time = WORD_LIST[0]
+                WORD_LIST.clear()
+                WORD_LIST.append(word_time)
+                print(f"Word list cleaned")
                 with open("word_list.txt", "w") as f:
                     f.write(",".join(WORD_LIST))
             
@@ -235,10 +241,10 @@ class Bot(commands.Bot):
     @commands.command()
     async def feiipito(self, ctx: commands.Context):
         if feiipito_com_status[0] == True and feiipito_on_cooldown[0] == False:
-            config["feiipito"] += 1
+            confg["feiipito_count"] += 1
             with open("config.json", "w") as f:
-                json.dump(config, f)
-            count = config["feiipito"]
+                json.dump(confg, f)
+            count = confg["feiipito_count"]
             await ctx.send(f"Feiipito nos ha tocado {count} veces PoroSad")
             feiipito_on_cooldown[0] = True
             await sleep(40)
@@ -251,18 +257,24 @@ class Bot(commands.Bot):
         split_msg = ctx.message.content.split(" ")
         if ctx.author.name in AUTHORIZED:
             username = split_msg[1]
-            duration = split_msg[2]
-            if int(duration) > 300:
-                duration = 300
             try:
-                channel = self.get_channel(split_msg[3])
-                await channel.send(f"/timeout {username} {duration}")
-                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
-                print(f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
+                duration = split_msg[2]
+                if int(duration) > 300:
+                    duration = 300
+                try:
+                    channel = self.get_channel(split_msg[3])
+                    await channel.send(f"/timeout {username} {duration}")
+                    print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                        f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
+                except IndexError:
+                    await ctx.send(f"/timeout {username} {duration}")
+                    print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                        f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
+            except ValueError:
+                channel = self.get_channel(split_msg[2])
+                await channel.send(f"/timeout {username} 5m")                
             except IndexError:
-                await ctx.send(f"/timeout {username} {duration}")
-                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
-                print(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
+                await ctx.send(f"/timeout {username} 5m")
 
 
     #Slot
@@ -291,11 +303,10 @@ class Bot(commands.Bot):
                     while slot_random[0] == slot_random[1] == slot_random[2]:
                         slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
                 await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ]ㅤ LOSE -1m PepeGiggle")
-                await sleep(0.5)
                 await ctx.send(f"/timeout {ctx.author.name} 60")
             slot_on_cooldown[0] = True
             await sleep(1)
-            slot_on_cooldown[0] = False         
+            slot_on_cooldown[0] = False    
 
 
     #Nunban
@@ -328,6 +339,8 @@ class Bot(commands.Bot):
     #Random
     @commands.command(aliases=["gr", "printrandom"])
     async def getrandom(self, ctx: commands.Context):
+        CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
+        CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
         await ctx.send(CHATTERS[random.randint(0, len(CHATTERS))])
     
     
@@ -353,11 +366,9 @@ class Bot(commands.Bot):
     @commands.command()
     async def help(self, ctx: commands.Context):
         if ctx.author.name in AUTHORIZED:
-
             print()
             print("help -- this command")
             print("v -- self 1 sec timeout")
-            print("act -- update viewer list")
             print("getrandom / gr / printrandom -- send random viewer")
             print("linktree / lt -- linktree spam")
             print("namess -- ban [user]")
@@ -372,6 +383,7 @@ class Bot(commands.Bot):
             print("allon -- actiate all commands")
             print("status -- current status of all commands")
             print("slot -- slot command")
+            print("feiipito -- feiipito count")
             print()     
 
 
