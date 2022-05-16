@@ -21,33 +21,61 @@ except FileNotFoundError:
     print(".json config file created. Please enter values on config.json file before use")
     input()
     exit()
+try:
+    with open("clips.json", "r") as f:
+        CLIPS = json.load(f)
+except FileNotFoundError:
+    temp = {
+        "last" : ""
+    }
+    with open("clips.json", "w") as f:
+        json.dump(temp, f)
+    CLIPS = temp
 
 
 TOKEN = confg["tmi"]
 CHANNELS = confg["channels"]
 AUTHORIZED = confg["authorized"]
+ADMIND = confg["admind"]
 PROPIETARY = confg["propietary"]
 SLOT_EMOTE = confg["slot"]
 CHATTERS = get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["vips"]
 CHATTERS.extend(get("https://tmi.twitch.tv/group/user/elmiillor/chatters").json()["chatters"]["viewers"])
-try:
+
+"""try:
     WORD_LIST = open("word_list.txt", "r").read().split(",")
 except FileNotFoundError:
     temp = ["3600"]
     with open("word_list.txt", "w") as f:
         f.writelines(temp)
-    WORD_LIST = temp
+    WORD_LIST = temp"""
 
 
 console_msg_status = [False]
 word_list_status = [False]
 vanish_com_status = [True]
+win_com_status = [True]
 slot_mach_status = [False]
 slot_on_cooldown = [False]
 copy_com_status = [False]
 copy_com_target = [0]
 feiipito_com_status = [True]
 feiipito_on_cooldown = [False]
+
+
+def confg_file_save():
+    with open("confg.json", "w") as f:
+        json.dump(confg, f)
+def clips_file_save():
+    with open("clips.json", "w") as f:
+        json.dump(CLIPS, f)
+def switch(command_status, command_name):
+    if command_status[0] == True:
+        command_status[0] = False
+        print(f"{command_name} command turned off")
+    elif command_status[0] == False:
+        command_status[0] = True
+        print(f"{command_name} command turned on")
 
 
 class Bot(commands.Bot):
@@ -77,12 +105,13 @@ class Bot(commands.Bot):
         #WordList
         if word_list_status[0] == True:
             incl = False
-            for i in range(1, len(WORD_LIST)):
-                if WORD_LIST[i] in split_msg:
+            for i in confg["word_list"]:
+                if i in split_msg:
                     incl = True
             if incl == True:
-                await sleep(0.4)
-                await message.channel.send(f"/timeout {message.author.name} {WORD_LIST[0]}")
+                await sleep(0.3)
+                word_time = confg["word_time"]
+                await message.channel.send(f"/timeout {message.author.name} {word_time}")
             incl = False
 
         #Copy Command
@@ -101,6 +130,7 @@ class Bot(commands.Bot):
             copy_com_status[0] = False
             vanish_com_status[0] = False
             feiipito_com_status[0] = False
+            win_com_status[0] = False
             print("All commands turned off")
     #All On
     @commands.command()
@@ -111,6 +141,7 @@ class Bot(commands.Bot):
             slot_mach_status[0] = True
             vanish_com_status[0] = True
             feiipito_com_status[0] = True
+            win_com_status[0] = True
             print("All commands turned on")
     #Current Check
     @commands.command()
@@ -123,6 +154,7 @@ class Bot(commands.Bot):
             print(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
             print(f"Vanish Command: {vanish_com_status[0]}")
             print(f"Feiipito Command: {feiipito_com_status[0]} [$fs]")
+            print(f"Win Command: {win_com_status[0]} [$wins]")
             print()
     #Console Msg
     @commands.command()
@@ -138,42 +170,26 @@ class Bot(commands.Bot):
     @commands.command()
     async def ws(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
-            if word_list_status[0] == False:
-                word_list_status[0] = True
-                print("Word command turned on")
-            elif word_list_status[0] == True:
-                word_list_status[0] = False
-                print("Word command turned off")
+            switch(word_list_status, "Word")
     #Slot
     @commands.command()
     async def ss(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
-            if slot_mach_status[0] == False:
-                slot_mach_status[0] = True
-                print("Slot command turned on")
-            elif slot_mach_status[0] == True:
-                slot_mach_status[0] = False
-                print("Slot command turned off")
+            switch(slot_mach_status, "Slot machine")
     #Vanish
     @commands.command()
     async def vs(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
-            if vanish_com_status[0] == True:
-                vanish_com_status[0] = False
-                print("Vanish command turned off")
-            elif vanish_com_status[0] == False:
-                vanish_com_status[0] = True
-                print("Vanish command turned on")
+            switch(vanish_com_status, "Vanish")
     #Feiipito
     @commands.command()
     async def fs(self, ctx: commands.Context):
         if ctx.author.name in PROPIETARY:
-            if feiipito_com_status[0] == True:
-                feiipito_com_status[0] = False
-                print("Feiipito command turned off")
-            elif feiipito_com_status[0] == False:
-                feiipito_com_status[0] = True
-                print("Feiipito command turned on")
+            switch(feiipito_com_status, "Feiipito")
+    #Win
+    @commands.command()
+    async def wins(self, ctx: commands.Context):
+        switch(win_com_status, "Win")
     #CopyStop
     @commands.command(aliases=["copystop"])
     async def cs(self, ctx: commands.Context):
@@ -198,52 +214,49 @@ class Bot(commands.Bot):
 
             if split_msg[1] == "list":
                 try:
-                    word_all_list = WORD_LIST[1]
-                    for i in range(2, len(WORD_LIST)):
-                        word_all_list = word_all_list + "," + WORD_LIST[i]
-                    print(f"Currently banning for t = {WORD_LIST[0]} the following words: {word_all_list}")
+                    word_time = confg["word_time"]
+                    word_all_list = confg["word_list"][0]
+                    for i in range(1, len(confg["word_list"])):
+                        word_all_list = word_all_list + "," + confg["word_list"][i]
+                    print(f"Currently banning for t = {word_time} the following words: {word_all_list}")
                 except IndexError:
-                    print(f"Currently not banning any word for t = {WORD_LIST[0]}")
+                    print(f"Currently not banning any word for t = {word_time}")
 
             if split_msg[1] == "time":
-                WORD_LIST[0] = split_msg[-1]
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(WORD_LIST))
-                print(f"Time in word command changed to {split_msg[-1]}")
+                try:
+                    confg["word_time"] = int(split_msg[-1])
+                    confg_file_save()
+                    print(f"Time in word command changed to {split_msg[-1]}")
+                except ValueError:
+                    pass
 
             if split_msg[1] == "add":
                 for i in range(2, len(split_msg)):
-                    if split_msg[i] not in WORD_LIST:
-                        WORD_LIST.append(split_msg[i])
+                    if split_msg[i] not in confg["word_list"]:
+                        confg["word_list"].append(split_msg[i])
                         print(f"{split_msg[i]} added to word list")
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(WORD_LIST))
+                confg_file_save()
             
             if split_msg[1] == "remove":
                 for i in range(2, len(split_msg)):
-                    if split_msg[i] in WORD_LIST:
-                        for a in range(len(WORD_LIST)):
-                            if split_msg[i] == WORD_LIST[a]:
-                                del WORD_LIST[a]
-                                print(f"{WORD_LIST[a]} removed from word list")
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(WORD_LIST))
+                    if split_msg[i] in confg["word_list"]:
+                        for a in range(len(confg["word_list"])):
+                            if split_msg[i] == confg["word_list"][a]:
+                                del confg["word_list"][a]
+                                print(f"{split_msg[i]} removed from word list")
+                confg_file_save()
             
             if split_msg[1] == "clean":
-                word_time = WORD_LIST[0]
-                WORD_LIST.clear()
-                WORD_LIST.append(word_time)
+                confg["word_list"].clear()
                 print(f"Word list cleaned")
-                with open("word_list.txt", "w") as f:
-                    f.write(",".join(WORD_LIST))
+                confg_file_save()
             
     #Feiipito
     @commands.command()
     async def feiipito(self, ctx: commands.Context):
         if feiipito_com_status[0] == True and feiipito_on_cooldown[0] == False:
             confg["feiipito_count"] += 1
-            with open("config.json", "w") as f:
-                json.dump(confg, f)
+            confg_file_save()
             count = confg["feiipito_count"]
             await ctx.send(f"Feiipito nos ha tocado {count} veces PoroSad")
             feiipito_on_cooldown[0] = True
@@ -318,12 +331,12 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[2])
                 await channel.send(f"/unban {username}")
-                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
-                print(f"Nunban command used by {ctx.author.name} : {username} ({channel})")
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                    f"Nunban command used by {ctx.author.name} : {username} ({channel})")
             except IndexError:
                 await ctx.send(f"/unban {username}")
-                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]")
-                print(f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                    f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
 
 
     #Linktree spam command
@@ -362,6 +375,60 @@ class Bot(commands.Bot):
             await ctx.send(f"/timeout {ctx.author.name} 1")
 
 
+    #Clips
+    @commands.command()
+    async def win(self, ctx: commands.Context):
+        if win_com_status[0] == True:
+            split_msg = ctx.message.content.lower().split(" ")
+            clip = split_msg[1]
+            if clip == "clips":
+                all_clips = None
+                for i in CLIPS:
+                    if all_clips == None:
+                        all_clips = i
+                    else:
+                        all_clips = all_clips + " / " + i
+                await ctx.send(f"All clips avaliable: {all_clips}")
+            else:
+                try:
+                    await ctx.send(CLIPS[clip])
+                except KeyError:
+                    await ctx.send('Clip not found, use "$win clips" if you want to see all clips avaliable')
+    
+    
+    #Clips admind command
+    @commands.command()
+    async def clip(self, ctx: commands.Context):
+        if ctx.author.name in ADMIND:
+            split_msg = ctx.message.content.lower().split(" ")
+            if split_msg[1] == "update" or split_msg[1] == "u":
+                key = split_msg[2]
+                clip = split_msg[3]
+                CLIPS.update({key : clip})
+                clips_file_save()
+                await ctx.send(f"Successfully added clip for {key}")
+            if split_msg[1] == "remove" or split_msg[1] == "r":
+                key = split_msg[2]
+                original_au = ctx.author.name
+                await ctx.send(f"Are you sure you want to remove clip for {key}? [Y/N]")
+                while True:
+                    message = await self.wait_for("message")
+                    try:
+                        author = message[0].author.name
+                        if author == original_au:
+                            response = message[0].content.lower().split(" ")
+                            if response[0] == "y":
+                                del CLIPS[key]
+                                clips_file_save()
+                                await ctx.send(f"Successfully removed clip for {key}")
+                                break
+                            else:
+                                break
+                    except AttributeError:
+                        pass
+
+
+
     #Help
     @commands.command()
     async def help(self, ctx: commands.Context):
@@ -381,9 +448,11 @@ class Bot(commands.Bot):
             print("ss -- slots command switch")
             print("alloff -- shut down all commands")
             print("allon -- actiate all commands")
-            print("status -- current status of all commands")
+            print("current -- current status of all commands")
             print("slot -- slot command")
             print("feiipito -- feiipito count")
+            print("win -- clips public command")
+            print("clip -- clip admind command")
             print()     
 
 
