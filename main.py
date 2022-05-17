@@ -65,9 +65,6 @@ class Bot(commands.Bot):
         if copy_com_status[0] == True and copy_com_target[-1] == message.author.name:
                 await message.channel.send(f"FeelsSpecialMan : {message.content}")
 
-        #Temp
-        if split_msg[0] == "feiipi1pogocuyw":
-            await message.channel.send("Mi cara, mi cara cuando feiipi1PogOCuyW ")
 
     #Switches
     #Current Check
