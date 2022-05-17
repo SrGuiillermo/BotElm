@@ -1,7 +1,6 @@
 from twitchio.ext import commands
 import json
 import asyncio
-from logging import info, debug
 
 
 def json_file_save(file_name, dic):
@@ -11,10 +10,10 @@ def json_file_save(file_name, dic):
 def switch(command_status, command_name):
     if command_status[0] == True:
         command_status[0] = False
-        info(f"{command_name} command turned off")
+        print(f"{command_name} command turned off")
     elif command_status[0] == False:
         command_status[0] = True
-        info(f"{command_name} command turned on")
+        print(f"{command_name} command turned on")
 
 def generate_default_conf():
     temp = {
@@ -29,7 +28,7 @@ def generate_default_conf():
         }
     with open("confg.json", "w") as f:
         json.dump(temp, f)
-    debug(".json config file created. Please enter values on config.json file before use")
+    print(".json config file created. Please enter values on config.json file before use")
     input()
     exit()
 
@@ -44,12 +43,12 @@ def generate_default_clips():
 def all_on(all_commands):
     for i in all_commands:
         i[0] = True
-    info("All commands turned on")
+    print("All commands turned on")
 
 def all_off(all_commands):
     for i in all_commands:
         i[0] = False
-    info("All commands turned off")
+    print("All commands turned off")
 
 async def cooldown(command_on_cooldown, cooldown):
     command_on_cooldown[0] = True

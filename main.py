@@ -1,4 +1,3 @@
-from logging import info, debug
 from twitchio.ext import commands
 import random
 from asyncio import sleep
@@ -39,7 +38,7 @@ class Bot(commands.Bot):
             prefix = "$",
             initial_channels = confg["channels"]
             )
-        debug("BOT READY")
+        print("BOT READY")
 
     async def event_message(self, message):
         split_msg = message.content.lower().split(" ")
@@ -76,13 +75,13 @@ class Bot(commands.Bot):
     async def current(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
             print()
-            info(f"Console: {console_msg_status[0]} [$con]")
-            info(f"Word Command: {word_list_status[0]} [$ws]")
-            info(f"Slot Command: {slot_mach_status[0]} [$ss]")
-            info(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
-            info(f"Vanish Command: {vanish_com_status[0]}")
-            info(f"Feiipito Command: {feiipito_com_status[0]} [$fs]")
-            info(f"Win Command: {win_com_status[0]} [$wins]")
+            print(f"Console: {console_msg_status[0]} [$con]")
+            print(f"Word Command: {word_list_status[0]} [$ws]")
+            print(f"Slot Command: {slot_mach_status[0]} [$ss]")
+            print(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
+            print(f"Vanish Command: {vanish_com_status[0]}")
+            print(f"Feiipito Command: {feiipito_com_status[0]} [$fs]")
+            print(f"Win Command: {win_com_status[0]} [$wins]")
             print()
     #All Off
     @commands.command()
@@ -135,7 +134,7 @@ class Bot(commands.Bot):
             split_msg = ctx.message.content.split(" ")
             copy_com_status[0] = True
             copy_com_target[0] = split_msg[-1]
-            debug(f"Now copying {copy_com_target[0]}'s messages")
+            print(f"Now copying {copy_com_target[0]}'s messages")
 
 
     #Word
@@ -150,15 +149,15 @@ class Bot(commands.Bot):
                     word_all_list = confg["word_list"][0]
                     for i in range(1, len(confg["word_list"])):
                         word_all_list = word_all_list + "," + confg["word_list"][i]
-                    info("Currently banning for t = {} the following words: {}".format(confg["word_time"], word_all_list))
+                    print("Currently banning for t = {} the following words: {}".format(confg["word_time"], word_all_list))
                 except IndexError:
-                    info("Currently not banning any word for t = {}".format(confg["word_time"]))
+                    print("Currently not banning any word for t = {}".format(confg["word_time"]))
 
             if arg == "time":
                 try:
                     confg["word_time"] = int(split_msg[-1])
                     lib.json_file_save(file_name="confg.json", dic=confg)
-                    info(f"Time in word command changed to {split_msg[-1]}")
+                    print(f"Time in word command changed to {split_msg[-1]}")
                 except ValueError:
                     pass
 
@@ -166,7 +165,7 @@ class Bot(commands.Bot):
                 for i in range(2, len(split_msg)):
                     if split_msg[i] not in confg["word_list"]:
                         confg["word_list"].append(split_msg[i])
-                        info(f"{split_msg[i]} added to word list")
+                        print(f"{split_msg[i]} added to word list")
                 lib.json_file_save(file_name="confg.json", dic=confg)
             
             if arg == "remove":
@@ -175,12 +174,12 @@ class Bot(commands.Bot):
                         for a in range(len(confg["word_list"])):
                             if split_msg[i] == confg["word_list"][a]:
                                 del confg["word_list"][a]
-                                info(f"{split_msg[i]} removed from word list")
+                                print(f"{split_msg[i]} removed from word list")
                 lib.json_file_save(file_name="confg.json", dic=confg)
             
             if arg == "clean":
                 confg["word_list"].clear()
-                info(f"Word list cleaned")
+                print(f"Word list cleaned")
                 lib.json_file_save(file_name="confg.json", dic=confg)
             
     #Feiipito
@@ -206,11 +205,11 @@ class Bot(commands.Bot):
                 try:
                     channel = self.get_channel(split_msg[3])
                     await channel.send(f"/timeout {username} {duration}")
-                    info(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                    print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
                         f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
                 except IndexError:
                     await ctx.send(f"/timeout {username} {duration}")
-                    info(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                    print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
                         f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
             except ValueError:
                 channel = self.get_channel(split_msg[2])
@@ -249,11 +248,11 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[2])
                 await channel.send(f"/unban {username}")
-                info(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
                     f"Nunban command used by {ctx.author.name} : {username} ({channel})")
             except IndexError:
                 await ctx.send(f"/unban {username}")
-                info(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
+                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
                     f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
 
 
