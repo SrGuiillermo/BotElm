@@ -3,7 +3,6 @@ import random
 from asyncio import sleep
 from requests import get
 import json
-import time
 import botElm_lib as lib
 try:
     with open("confg.json", "r") as f:
@@ -20,7 +19,8 @@ except FileNotFoundError:
 console_msg_status = [False]
 word_list_status = [False]
 vanish_com_status = [True]
-win_com_status = [True]
+win_com_status = [False]
+samu_com_status = [True]
 slot_mach_status = [False]
 slot_on_cooldown = [False]
 copy_com_status = [False]
@@ -28,7 +28,8 @@ copy_com_target = [0]
 feiipito_com_status = [True]
 feiipito_on_cooldown = [False]
 all_commands = [console_msg_status, word_list_status, vanish_com_status, win_com_status, slot_mach_status, \
-                copy_com_status, feiipito_com_status]
+                copy_com_status, feiipito_com_status, samu_com_status]
+
 
 class Bot(commands.Bot):
 
@@ -62,8 +63,23 @@ class Bot(commands.Bot):
             incl = False
 
         #Copy Command
-        if copy_com_status[0] == True and copy_com_target[-1] == message.author.name:
+        if copy_com_status[0] == True:
+            if copy_com_target[-1] == message.author.name:
                 await message.channel.send(f"FeelsSpecialMan : {message.content}")
+        #Samuel Command
+        if samu_com_status[0] == True:
+            if message.author.name == "samuelvpa":
+                if "srguillermo" in message.content.lower() or "@srguillermo" in message.content.lower():
+                    await message.channel.send(f"/timeout {message.author.name} 300")
+
+    #Exit
+    @commands.command()
+    async def exit(self, ctx: commands.Context):
+        if ctx.author.name in confg["propietary"]:
+            await ctx.message.channel.send("Close and turn off bot?")
+            response = await lib.wait_for_response(self, ctx)
+            if response[0] == "y":
+                exit()
 
 
     #Switches
@@ -79,51 +95,58 @@ class Bot(commands.Bot):
             print(f"Vanish Command: {vanish_com_status[0]}")
             print(f"Feiipito Command: {feiipito_com_status[0]} [$fs]")
             print(f"Win Command: {win_com_status[0]} [$wins]")
+            print(f"Samuel Command: {samu_com_status[0]} [$sams]")
             print()
     #All Off
     @commands.command()
     async def alloff(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.all_off(all_commands)
+            lib.all_off(all_commands, ctx)
     #All On
     @commands.command()
     async def allon(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.all_on(all_commands)
+            lib.all_on(all_commands, ctx)
     #Console Msg
     @commands.command()
     async def con(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(console_msg_status, "Console logs")
+            lib.switch(console_msg_status, "Console logs", ctx)
     #Word List
     @commands.command()
     async def ws(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(word_list_status, "Word")
+            lib.switch(word_list_status, "Word", ctx)
     #Slot
     @commands.command()
     async def ss(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(slot_mach_status, "Slot machine")
+            lib.switch(slot_mach_status, "Slot machine", ctx)
     #Vanish
     @commands.command()
     async def vs(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(vanish_com_status, "Vanish")
+            lib.switch(vanish_com_status, "Vanish", ctx)
     #Feiipito
     @commands.command()
     async def fs(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(feiipito_com_status, "Feiipito")
+            lib.switch(feiipito_com_status, "Feiipito", ctx)
     #Win
     @commands.command()
     async def wins(self, ctx: commands.Context):
-        lib.switch(win_com_status, "Win")
+        if ctx.author.name in confg["propietary"]:
+            lib.switch(win_com_status, "Win", ctx)
+    #Samuel
+    @commands.command()
+    async def sams(self, ctx: commands.Context):
+        if ctx.author.name in confg["propietary"]:
+            lib.switch(samu_com_status, "Samuel", ctx)
     #CopyStop
     @commands.command(aliases=["copystop"])
     async def cs(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(copy_com_status, "Copy")
+            lib.switch(copy_com_status, "Copy", ctx)
     #CopyTarget
     @commands.command()
     async def copy(self, ctx: commands.Context):
@@ -131,7 +154,7 @@ class Bot(commands.Bot):
             split_msg = ctx.message.content.split(" ")
             copy_com_status[0] = True
             copy_com_target[0] = split_msg[-1]
-            print(f"Now copying {copy_com_target[0]}'s messages")
+            lib.log(f"Now copying {copy_com_target[0]}'s messages")
 
 
     #Word
@@ -154,7 +177,7 @@ class Bot(commands.Bot):
                 try:
                     confg["word_time"] = int(split_msg[-1])
                     lib.json_file_save(file_name="confg.json", dic=confg)
-                    print(f"Time in word command changed to {split_msg[-1]}")
+                    lib.log(f"Time in word command changed to {split_msg[-1]} by {ctx.author.name}")
                 except ValueError:
                     pass
 
@@ -162,7 +185,7 @@ class Bot(commands.Bot):
                 for i in range(2, len(split_msg)):
                     if split_msg[i] not in confg["word_list"]:
                         confg["word_list"].append(split_msg[i])
-                        print(f"{split_msg[i]} added to word list")
+                        lib.log(f"{split_msg[i]} added to word list by {ctx.author.name}")
                 lib.json_file_save(file_name="confg.json", dic=confg)
             
             if arg == "remove":
@@ -171,7 +194,7 @@ class Bot(commands.Bot):
                         for a in range(len(confg["word_list"])):
                             if split_msg[i] == confg["word_list"][a]:
                                 del confg["word_list"][a]
-                                print(f"{split_msg[i]} removed from word list")
+                                lib.log(f"{split_msg[i]} removed from word list by {ctx.author.name}")
                 lib.json_file_save(file_name="confg.json", dic=confg)
             
             if arg == "clean":
@@ -182,11 +205,12 @@ class Bot(commands.Bot):
     #Feiipito
     @commands.command()
     async def feiipito(self, ctx: commands.Context):
-        if feiipito_com_status[0] == True and feiipito_on_cooldown[0] == False:
-            confg["feiipito_count"] += 1
-            lib.json_file_save(file_name="confg.json", dic=confg)
-            await ctx.send("Feiipito nos ha tocado {} veces PoroSad".format(confg["feiipito_count"]))
-            await lib.cooldown(feiipito_on_cooldown, 20)
+        if feiipito_com_status[0] == True:
+            if feiipito_on_cooldown[0] == False:
+                confg["feiipito_count"] += 1
+                lib.json_file_save(file_name="confg.json", dic=confg)
+                await ctx.send("Feiipito nos ha tocado {} veces PoroSad".format(confg["feiipito_count"]))
+                await lib.cooldown(feiipito_on_cooldown, 20)
 
 
     #Namess
@@ -202,38 +226,43 @@ class Bot(commands.Bot):
                 try:
                     channel = self.get_channel(split_msg[3])
                     await channel.send(f"/timeout {username} {duration}")
-                    print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
-                        f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
+                    lib.log(f"Namess command used by {ctx.author.name} : {username} ({duration}s {channel})")
+                        
                 except IndexError:
                     await ctx.send(f"/timeout {username} {duration}")
-                    print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
-                        f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
+                    lib.log(f"Namess command used by {ctx.author.name} : {username} ({duration}s <{ctx.channel.name}>)")
+                    
             except ValueError:
                 channel = self.get_channel(split_msg[2])
-                await channel.send(f"/timeout {username} 5m")                
+                await channel.send(f"/timeout {username} 5m")
+                lib.log(f"Namess command used by {ctx.author.name} : {username} (5m <{channel}>)")              
+            
             except IndexError:
                 await ctx.send(f"/timeout {username} 5m")
+                lib.log(f"Namess command used by {ctx.author.name} : {username} (5m <{ctx.channel.name}>)")
 
 
     #Slot
     @commands.command()
     async def slot(self, ctx: commands.Context):
-        if slot_mach_status[0] == True and slot_on_cooldown[0] == False:
-            slot_emote = confg["slot"]
-            slot_chance = random.randint(1, 4)
-            if slot_chance == 2:
-                slot_win = random.randint(0, len(slot_emote) - 1)
-                await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_win]} | {slot_emote[slot_win]} | {slot_emote[slot_win]} ]ㅤ WIN Pog Esperando un usuario peepoEvil")
-                timeout = await lib.wait_for_response(self, ctx)
-                await ctx.send(f"/timeout {timeout[0]} 60")
-            else:
-                slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
-                if slot_random[0] == slot_random[1] == slot_random[2]:
-                    while slot_random[0] == slot_random[1] == slot_random[2]:
-                        slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
-                await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ]ㅤ LOSE -1m PepeGiggle")
-                await ctx.send(f"/timeout {ctx.author.name} 60")
-            await lib.cooldown(slot_on_cooldown, 1) 
+        if slot_mach_status[0] == True:
+            if slot_on_cooldown[0] == False:
+                slot_emote = confg["slot"]
+                slot_chance = random.randint(1, 4)
+                if slot_chance == 2:
+                    slot_win = random.randint(0, len(slot_emote) - 1)
+                    await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_win]} | {slot_emote[slot_win]} | {slot_emote[slot_win]} ]ㅤ WIN Pog Esperando un usuario peepoEvil")
+                    timeout = await lib.wait_for_response(self, ctx)
+                    await ctx.send(f"/timeout {timeout[0]} 60")
+                    lib.log(f"Slot command used by {ctx.author.name} : {timeout} <{ctx.channel.name}>")
+                else:
+                    slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
+                    if slot_random[0] == slot_random[1] == slot_random[2]:
+                        while slot_random[0] == slot_random[1] == slot_random[2]:
+                            slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
+                    await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ]ㅤ LOSE -1m PepeGiggle")
+                    await ctx.send(f"/timeout {ctx.author.name} 60")
+                await lib.cooldown(slot_on_cooldown, 1) 
 
 
     #Nunban
@@ -245,12 +274,11 @@ class Bot(commands.Bot):
             try:
                 channel = self.get_channel(split_msg[2])
                 await channel.send(f"/unban {username}")
-                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
-                    f"Nunban command used by {ctx.author.name} : {username} ({channel})")
+                lib.log(f"Nunban command used by {ctx.author.name} : {username} ({channel})")
+
             except IndexError:
                 await ctx.send(f"/unban {username}")
-                print(f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]ㅤ"\
-                    f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
+                lib.log(f"Nunban command used by {ctx.author.name} : {username} (<{ctx.channel.name}>)")
 
 
     #Linktree spam command
@@ -310,6 +338,7 @@ class Bot(commands.Bot):
                 CLIPS.update({key : clip})
                 lib.json_file_save(file_name="clips.json", dic=CLIPS)
                 await ctx.send(f"Successfully added clip for {key}")
+                lib.log(f"{key} clip added by {ctx.author.name}")
             if split_msg[1] == "remove" or split_msg[1] == "r":
                 key = split_msg[2]
                 await ctx.send(f"Are you sure you want to remove clip for {key}? [Y/N]")
@@ -318,6 +347,7 @@ class Bot(commands.Bot):
                     del CLIPS[key]
                     lib.json_file_save(file_name="clips.json", dic=CLIPS)
                     await ctx.send(f"Successfully removed clip for {key}")
+                    lib.log(f"{key} clip removed by {ctx.author.name}")
                 else : pass 
 
 
@@ -327,6 +357,7 @@ class Bot(commands.Bot):
         if ctx.author.name in confg["authorized"]:
             print()
             print("help -- this command")
+            print("exit -- exit the bot")
             print("v -- self 1 sec timeout")
             print("getrandom / gr / printrandom -- send random viewer")
             print("linktree / lt -- linktree spam")
@@ -338,6 +369,7 @@ class Bot(commands.Bot):
             print("ws -- word command switch")
             print("con -- console log switch")
             print("ss -- slots command switch")
+            print("sams -- samuel command switch")
             print("alloff -- shut down all commands")
             print("allon -- actiate all commands")
             print("current -- current status of all commands")

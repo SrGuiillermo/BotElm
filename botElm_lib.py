@@ -1,19 +1,19 @@
 from twitchio.ext import commands
 import json
 import asyncio
-
+import time
 
 def json_file_save(file_name, dic):
     with open(file_name, "w") as f:
         json.dump(dic, f)
         
-def switch(command_status, command_name):
+def switch(command_status, command_name, ctx: commands.Context):
     if command_status[0] == True:
         command_status[0] = False
-        print(f"{command_name} command turned off")
+        log(f"{command_name} command turned off by {ctx.author.name}")
     elif command_status[0] == False:
         command_status[0] = True
-        print(f"{command_name} command turned on")
+        log(f"{command_name} command turned on by {ctx.author.name}")
 
 def generate_default_conf():
     temp = {
@@ -40,15 +40,15 @@ def generate_default_clips():
         json.dump(temp, f)
     return temp
 
-def all_on(all_commands):
+def all_on(all_commands, ctx: commands.Context):
     for i in all_commands:
         i[0] = True
-    print("All commands turned on")
+    log(f"All commands turned on by {ctx.author.name}")
 
-def all_off(all_commands):
+def all_off(all_commands, ctx: commands.Context):
     for i in all_commands:
         i[0] = False
-    print("All commands turned off")
+    log(f"All commands turned off by {ctx.author.name}")
 
 async def cooldown(command_on_cooldown, cooldown):
     command_on_cooldown[0] = True
@@ -68,6 +68,13 @@ async def wait_for_response(self, ctx: commands.Context):
             pass
     return response
 
+
+def log(log_to_save):
+    log = (f"{time.localtime().tm_hour}:{time.localtime().tm_min} [{time.localtime().tm_mday}/{time.localtime().tm_mon}]\t"\
+           f"{log_to_save}")
+    print(log)
+    with open("logs.txt", "a") as f:
+        f.write(f"{log}\n")
 """
 ------------------------------------------------------------------------
 if split_msg[0] == "livee":
