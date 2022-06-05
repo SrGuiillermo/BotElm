@@ -16,6 +16,7 @@ except FileNotFoundError:
     CLIPS = lib.generate_default_clips()
 
 
+opgg_on_cooldown = [False]
 console_msg_status = [False]
 word_list_status = [False]
 vanish_com_status = [True]
@@ -71,6 +72,12 @@ class Bot(commands.Bot):
             if message.author.name == "samuelvpa":
                 if "srguillermo" in message.content.lower() or "@srguillermo" in message.content.lower():
                     await message.channel.send(f"/timeout {message.author.name} 300")
+
+        #opgg
+        if split_msg[0] == "!opgg":
+            if opgg_on_cooldown[0] == False:
+                await message.channel.send(f"{message.author.name} https://euw.op.gg/summoners/euw/Elmill%C3%B8R")
+                await lib.cooldown(opgg_on_cooldown, 60)
 
     #Exit
     @commands.command()
