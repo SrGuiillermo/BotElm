@@ -76,8 +76,9 @@ class Bot(commands.Bot):
         #opgg
         if split_msg[0] == "!opgg":
             if opgg_on_cooldown[0] == False:
-                await message.channel.send(f"{message.author.name} https://euw.op.gg/summoners/euw/Elmill%C3%B8R")
-                await lib.cooldown(opgg_on_cooldown, 60)
+                if message.channel.name == "elmiillor":
+                    await message.channel.send(f"{message.author.name} https://euw.op.gg/summoners/euw/Elmill%C3%B8R")
+                    await lib.cooldown(opgg_on_cooldown, 60)
 
     #Exit
     @commands.command()
@@ -181,12 +182,9 @@ class Bot(commands.Bot):
                     print("Currently not banning any word for t = {}".format(confg["word_time"]))
 
             if arg == "time":
-                try:
-                    confg["word_time"] = int(split_msg[-1])
-                    lib.json_file_save(file_name="confg.json", dic=confg)
-                    lib.log(f"Time in word command changed to {split_msg[-1]} by {ctx.author.name}")
-                except ValueError:
-                    pass
+                confg["word_time"] = split_msg[-1]
+                lib.json_file_save(file_name="confg.json", dic=confg)
+                lib.log(f"Time in word command changed to {split_msg[-1]} by {ctx.author.name}")
 
             if arg == "add":
                 for i in range(2, len(split_msg)):
