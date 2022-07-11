@@ -3,6 +3,7 @@ import json
 import asyncio
 import time
 
+
 def json_file_save(file_name, dic):
     with open(file_name, "w") as f:
         json.dump(dic, f)
@@ -42,18 +43,21 @@ def generate_default_clips():
 
 def all_on(all_commands, ctx: commands.Context):
     for i in all_commands:
-        i[0] = True
+        all_commands[i][-1] = True
+        if all_commands[i] == all_commands["copy_com_status"]:
+            all_commands[i][-1] = False
+            
     log(f"All commands turned on by {ctx.author.name}")
 
 def all_off(all_commands, ctx: commands.Context):
     for i in all_commands:
-        i[0] = False
+        all_commands[i][-1] = False
     log(f"All commands turned off by {ctx.author.name}")
 
 async def cooldown(command_on_cooldown, cooldown):
-    command_on_cooldown[0] = True
+    command_on_cooldown[-1] = True
     await asyncio.sleep(cooldown)
-    command_on_cooldown[0] = False
+    command_on_cooldown[-1] = False
 
 async def wait_for_response(self, ctx: commands.Context):
     original_au = ctx.author.name

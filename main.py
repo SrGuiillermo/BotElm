@@ -9,27 +9,30 @@ try:
         confg = json.load(f)
 except FileNotFoundError:
     lib.generate_default_conf()
-try:
-    with open("clips.json", "r") as f:
-        CLIPS = json.load(f)
-except FileNotFoundError:
-    CLIPS = lib.generate_default_clips()
 
 
-opgg_on_cooldown = [False]
-console_msg_status = [False]
-word_list_status = [False]
-vanish_com_status = [True]
-win_com_status = [False]
-samu_com_status = [False]
-slot_mach_status = [False]
-slot_on_cooldown = [False]
-copy_com_status = [False]
-copy_com_target = [0]
-feiipito_com_status = [True]
-feiipito_on_cooldown = [False]
-all_commands = [console_msg_status, word_list_status, vanish_com_status, win_com_status, slot_mach_status, \
-                copy_com_status, feiipito_com_status, samu_com_status]
+commands_status = {
+    "console_msg_status" : [False],
+    "word_list_status" : [False],
+    "vanish_com_status" : [True],
+    "win_com_status" : [False],
+    "samu_com_status" : [False],
+    "slot_mach_status" : [False],
+    "copy_com_status" : [False],
+    "feiipito_com_status" : [False],
+    "opgg_com_status" : [True],
+}
+
+commands_cooldowns = {
+    "opgg_on_cooldown" : [False],
+    "slot_on_cooldown" : [False],
+    "feiipito_on_cooldown" : [False],
+}
+
+commands_conf = {
+    "opgg" : ["https://euw.op.gg/summoners/euw/LA%20BRUIX4%20SNIPER"],
+    "copy_com_target" : [0],
+}
 
 
 class Bot(commands.Bot):
@@ -48,37 +51,36 @@ class Bot(commands.Bot):
         #Console msg
         if message.echo:
             return
-        if console_msg_status[0] == True:
+        if commands_status["console_msg_status"][-1] == True:
             print(f"<{message.channel.name}> {message.author.name} : {message.content}")
         await self.handle_commands(message)
 
         #WordList
-        if word_list_status[0] == True:
+        if commands_status["word_list_status"][-1] == True:
             incl = False
             for i in confg["word_list"]:
                 if i in split_msg:
                     incl = True
             if incl == True:
-                await sleep(0.3)
+                await sleep(0.8)
                 await message.channel.send("/timeout {} {}".format(message.author.name, confg["word_time"]))
-            incl = False
 
         #Copy Command
-        if copy_com_status[0] == True:
-            if copy_com_target[-1] == message.author.name:
+        if commands_status["copy_com_status"][-1] == True:
+            if commands_status["copy_com_target"][-1] == message.author.name:
                 await message.channel.send(f"FeelsSpecialMan : {message.content}")
+        
         #Samuel Command
-        if samu_com_status[0] == True:
+        if commands_status["samu_com_status"][-1] == True:
             if message.author.name == "samuelvpa":
                 if "srguillermo" in message.content.lower() or "@srguillermo" in message.content.lower():
                     await message.channel.send(f"/timeout {message.author.name} 300")
-
-        #opgg
-        if split_msg[0] == "!opgg":
-            if opgg_on_cooldown[0] == False:
-                if message.channel.name == "elmiillor":
-                    await message.channel.send(f"{message.author.name} https://euw.op.gg/summoners/euw/Elmill%C3%B8R")
-                    await lib.cooldown(opgg_on_cooldown, 60)
+        
+        #OPGG Command
+        if commands_status["opgg_com_status"][-1] == True:
+            if message.channel.name == "elmiillor":
+                if "!opgg" in split_msg or "!elo" in split_msg:
+                    await message.channel.send("{} {}".format(message.author.name, commands_conf["opgg"][-1]))
 
     #Exit
     @commands.command()
@@ -96,73 +98,88 @@ class Bot(commands.Bot):
     async def current(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
             print()
-            print(f"Console: {console_msg_status[0]} [$con]")
-            print(f"Word Command: {word_list_status[0]} [$ws]")
-            print(f"Slot Command: {slot_mach_status[0]} [$ss]")
-            print(f"Copy Command: {copy_com_status[0]}; Target = {copy_com_target[-1]} [$copy/$cs]")
-            print(f"Vanish Command: {vanish_com_status[0]}")
-            print(f"Feiipito Command: {feiipito_com_status[0]} [$fs]")
-            print(f"Win Command: {win_com_status[0]} [$wins]")
-            print(f"Samuel Command: {samu_com_status[0]} [$sams]")
+            print("Console: {} [$con]".format(commands_status["console_msg_status"][-1]))
+            print("Word Command: {} [$ws]".format(commands_status["word_list_status"][-1]))
+            print("Slot Command: {} [$ss]".format(commands_status["slot_mach_status"][-1]))
+            print("Copy Command: {}; Target = {} [$copy/$cs]".format(commands_status["copy_com_status"][-1], commands_conf["copy_com_target"][-1]))
+            print("Vanish Command: {}".format(commands_status["vanish_com_status"][-1]))
+            print("Feiipito Command: {} [$fs]".format(commands_status["feiipito_com_status"][-1]))
+            print("Win Command: {} [$wins]".format(commands_status["win_com_status"][-1]))
+            print("Samuel Command: {} [$sams]".format(commands_status["samu_com_status"][-1]))
+            print("OPGG Command: {} [$opggs]".format(commands_status["opgg_com_status"][-1]))
             print()
     #All Off
     @commands.command()
     async def alloff(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.all_off(all_commands, ctx)
+            lib.all_off(commands_status, ctx)
     #All On
     @commands.command()
     async def allon(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.all_on(all_commands, ctx)
+            lib.all_on(commands_status, ctx)
     #Console Msg
     @commands.command()
     async def con(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(console_msg_status, "Console logs", ctx)
+            lib.switch(commands_status["console_msg_status"], "Console logs", ctx)
     #Word List
     @commands.command()
     async def ws(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(word_list_status, "Word", ctx)
+            lib.switch(commands_status["word_list_status"], "Word", ctx)
     #Slot
     @commands.command()
     async def ss(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(slot_mach_status, "Slot machine", ctx)
+            lib.switch(commands_status["slot_mach_status"], "Slot machine", ctx)
     #Vanish
     @commands.command()
     async def vs(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(vanish_com_status, "Vanish", ctx)
+            lib.switch(commands_status["vanish_com_status"], "Vanish", ctx)
     #Feiipito
     @commands.command()
     async def fs(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(feiipito_com_status, "Feiipito", ctx)
+            lib.switch(commands_status["feiipito_com_status"], "Feiipito", ctx)
     #Win
     @commands.command()
     async def wins(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(win_com_status, "Win", ctx)
+            lib.switch(commands_status["win_com_status"], "Win", ctx)
     #Samuel
     @commands.command()
     async def sams(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(samu_com_status, "Samuel", ctx)
+            lib.switch(commands_status["samu_com_status"], "Samuel", ctx)
+    #OPGG
+    @commands.command()
+    async def opggs(self, ctx: commands.Context):
+        if ctx.author.name in confg["propietary"]:
+            lib.switch(commands_status["opgg_com_status"], "OPGG", ctx)
     #CopyStop
     @commands.command(aliases=["copystop"])
     async def cs(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
-            lib.switch(copy_com_status, "Copy", ctx)
+            lib.switch(["copy_com_status"], "Copy", ctx)
     #CopyTarget
     @commands.command()
     async def copy(self, ctx: commands.Context):
         if ctx.author.name in confg["propietary"]:
             split_msg = ctx.message.content.split(" ")
-            copy_com_status[0] = True
-            copy_com_target[0] = split_msg[-1]
-            lib.log(f"Now copying {copy_com_target[0]}'s messages")
+            commands_status["copy_com_status"] = True
+            commands_conf["copy_com_target"][-1] = split_msg[-1]
+            lib.log("Now copying {}'s messages".format(commands_conf["copy_com_target"][-1]))
+
+
+    #OPGG Change
+    @commands.command()
+    async def opggc(self, ctx: commands.Context):
+        if ctx.author.name in confg["propietary"]:
+            split_msg = ctx.message.content.split(" ", 1)
+            commands_conf["opgg"][-1] = split_msg[-1]
+            lib.log("OPGG changed")
 
 
     #Word
@@ -210,12 +227,12 @@ class Bot(commands.Bot):
     #Feiipito
     @commands.command()
     async def feiipito(self, ctx: commands.Context):
-        if feiipito_com_status[0] == True:
-            if feiipito_on_cooldown[0] == False:
+        if commands_status["feiipito_com_status"][-1] == True:
+            if commands_cooldowns["feiipito_on_cooldown"][-1] == False:
                 confg["feiipito_count"] += 1
                 lib.json_file_save(file_name="confg.json", dic=confg)
                 await ctx.send("Feiipito nos ha tocado {} veces PoroSad".format(confg["feiipito_count"]))
-                await lib.cooldown(feiipito_on_cooldown, 20)
+                await lib.cooldown(commands_cooldowns["feiipito_on_cooldown"], 20)
 
 
     #Namess
@@ -224,6 +241,8 @@ class Bot(commands.Bot):
         split_msg = ctx.message.content.split(" ")
         if ctx.author.name in confg["authorized"]:
             username = split_msg[1]
+            if username == "ernesthegrizzly ":
+                username == "nick_namess"
             try:
                 duration = split_msg[2]
                 if int(duration) > 300:
@@ -250,8 +269,8 @@ class Bot(commands.Bot):
     #Slot
     @commands.command()
     async def slot(self, ctx: commands.Context):
-        if slot_mach_status[0] == True:
-            if slot_on_cooldown[0] == False:
+        if commands_status["slot_mach_status"][-1] == True:
+            if commands_cooldowns["slot_on_cooldown"][-1] == False:
                 slot_emote = confg["slot"]
                 slot_chance = random.randint(1, 4)
                 if slot_chance == 2:
@@ -267,7 +286,7 @@ class Bot(commands.Bot):
                             slot_random = random.sample(range(0, len(slot_emote) - 1), 3)
                     await ctx.send(f"{ctx.author.name} ㅤ👉 ㅤ[ {slot_emote[slot_random[0]]} | {slot_emote[slot_random[1]]} | {slot_emote[slot_random[2]]} ]ㅤ LOSE -1m PepeGiggle")
                     await ctx.send(f"/timeout {ctx.author.name} 60")
-                await lib.cooldown(slot_on_cooldown, 1) 
+                await lib.cooldown(commands_cooldowns["slot_on_cooldown"], 15) 
 
 
     #Nunban
@@ -307,53 +326,8 @@ class Bot(commands.Bot):
     #Vanish Command
     @commands.command()
     async def v(self, ctx: commands.Context):
-        if vanish_com_status[0] == True:
+        if commands_status["vanish_com_status"][-1] == True:
             await ctx.send(f"/timeout {ctx.author.name} 1")
-
-
-    #Clips
-    @commands.command()
-    async def win(self, ctx: commands.Context):
-        if win_com_status[0] == True:
-            split_msg = ctx.message.content.lower().split(" ")
-            clip = split_msg[1]
-            if clip == "clips":
-                all_clips = None
-                for i in CLIPS:
-                    if all_clips is None:
-                        all_clips = i
-                    else:
-                        all_clips = all_clips + " / " + i
-                await ctx.send(f"All clips avaliable: {all_clips}")
-            else:
-                try:
-                    await ctx.send(CLIPS[clip])
-                except KeyError:
-                    await ctx.send('Clip not found, use "$win clips" if you want to see all clips avaliable')
-
-    
-    #Clips admind command
-    @commands.command()
-    async def clip(self, ctx: commands.Context):
-        if ctx.author.name in confg["admind"]:
-            split_msg = ctx.message.content.lower().split(" ")
-            if split_msg[1] == "update" or split_msg[1] == "u":
-                key = split_msg[2]
-                clip = split_msg[3]
-                CLIPS.update({key : clip})
-                lib.json_file_save(file_name="clips.json", dic=CLIPS)
-                await ctx.send(f"Successfully added clip for {key}")
-                lib.log(f"{key} clip added by {ctx.author.name}")
-            if split_msg[1] == "remove" or split_msg[1] == "r":
-                key = split_msg[2]
-                await ctx.send(f"Are you sure you want to remove clip for {key}? [Y/N]")
-                response = await lib.wait_for_response(self, ctx)
-                if response[0] == "y":
-                    del CLIPS[key]
-                    lib.json_file_save(file_name="clips.json", dic=CLIPS)
-                    await ctx.send(f"Successfully removed clip for {key}")
-                    lib.log(f"{key} clip removed by {ctx.author.name}")
-                else : pass 
 
 
     #Help
